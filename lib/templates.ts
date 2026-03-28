@@ -180,5 +180,25 @@ export const TEMPLATES: Template[] = [
       copywritingTone: 'Urgent, persuasif, axé sur la rareté et l\'autorité.',
       suggestedStructure: ['Hero Video/VSL', 'Problem/Agitation', 'Solution/Presentation', 'Testimonials', 'Pricing/Call to Action', 'FAQ', 'Final CTA']
     }
+  },
+  {
+    id: 'automated-vsl-master',
+    name: 'Automated VSL/Webinar',
+    description: 'Template optimisé pour les VSL et webinaires automatisés, focalisé sur l\'engagement vidéo et la conversion.',
+    category: 'Webinaire & VSL',
+    thumbnail: 'https://images.leadconnectorhq.com/image/f_webp/q_80/r_1200/u_https://assets.cdn.filesafe.space/c3cmUrbBhdgs54adfIYP/media/64380887a7983a65ebeebce0.jpeg',
+    config: {
+      branding: {
+        primaryColor: '#205CFF', // Extrait de --color-lgf0wsud (Boutons)
+        secondaryColor: '#F1F9FF', // Extrait de --color-lg5sh5ww (Fond secondaire)
+        backgroundColor: '#ffffff', // Fond principal
+        textColor: '#152741', // Extrait de --color-lg5r95dz
+        accentColor: '#0044ff', // Extrait de --color-lg5rrtfu
+        fontHeadlines: 'Plus Jakarta Sans',
+        fontBody: 'Plus Jakarta Sans'
+      },
+      copywritingTone: 'Direct, persuasif, autoritaire et orienté conversion.',
+      suggestedStructure: ['Hero VSL', 'About Us', 'Testimonials', 'FAQ', 'Final CTA']
+    }
   }
 ];
