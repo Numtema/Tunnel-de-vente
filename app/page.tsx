@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
+import * as d3 from 'd3';
 import JSZip from 'jszip';
 import { get, set } from 'idb-keyval';
 import { Copy, Check, Maximize2, Minimize2, FileCode2, Download, ExternalLink, X, FileArchive, FileJson, Sparkles, LayoutDashboard, Rocket, FileText, Settings, Users, ArrowRight, Image as ImageIcon, Trash2, CreditCard, User, Mail, Lock, LogOut } from 'lucide-react';
@@ -40,15 +41,19 @@ const CodeBlock = ({ code, filename, language }: { code: string, filename: strin
   };
 
   return (
-    <div className="bg-[#3A4D4A] rounded-xl overflow-hidden border border-[#4A5D5A] shadow-lg flex flex-col w-full">
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="bg-[#3A4D4A] rounded-xl overflow-hidden border border-[#4A5D5A] shadow-lg flex flex-col w-full"
+    >
       <div className="flex justify-between items-center px-4 py-3 bg-[#2C3E3B] border-b border-[#4A5D5A]">
         <div className="flex items-center gap-2 text-gray-200 font-mono text-sm">
-          <FileCode2 size={16} className="text-[#D4A017]" />
+          <FileCode2 size={16} className="text-[#D4A017] drop-shadow-[0_0_5px_rgba(212,160,23,0.5)]" />
           {filename}
         </div>
         <button 
           onClick={handleCopy} 
-          className="text-gray-300 hover:text-white transition-colors flex items-center gap-1.5 text-xs bg-[#3A4D4A] hover:bg-[#4A5D5A] px-3 py-1.5 rounded-full"
+          className="text-gray-300 hover:text-white transition-colors flex items-center gap-1.5 text-xs bg-[#3A4D4A] hover:bg-[#4A5D5A] px-3 py-1.5 rounded-full border border-white/5"
         >
           {copied ? <Check size={14} className="text-green-400"/> : <Copy size={14} />}
           {copied ? 'Copié !' : 'Copier'}
@@ -68,9 +73,139 @@ const CodeBlock = ({ code, filename, language }: { code: string, filename: strin
       >
         {expanded ? <><Minimize2 size={16}/> Réduire</> : <><Maximize2 size={16}/> Développer</>}
       </button>
-    </div>
+    </motion.div>
   );
 };
+
+const MiniChart = ({ color = '#D4A017', height = 20, width = 60 }: { color?: string, height?: number, width?: number }) => {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [data, setData] = useState<number[]>([10, 12, 8, 15, 11, 13, 9, 14, 10, 12, 8, 15]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setData(prev => {
+        const next = [...prev.slice(1), Math.random() * 10 + 5];
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (!svgRef.current) return;
+
+    const svg = d3.select(svgRef.current);
+    svg.selectAll("*").remove();
+
+    const x = d3.scaleLinear().domain([0, data.length - 1]).range([0, width]);
+    const y = d3.scaleLinear().domain([0, 20]).range([height, 0]);
+
+    const line = d3.line<number>()
+      .x((_, i) => x(i))
+      .y(d => y(d))
+      .curve(d3.curveBasis);
+
+    const area = d3.area<number>()
+      .x((_, i) => x(i))
+      .y0(height)
+      .y1(d => y(d))
+      .curve(d3.curveBasis);
+
+    // Add gradient
+    const gradientId = `gradient-${Math.random().toString(36).substr(2, 9)}`;
+    const defs = svg.append("defs");
+    const gradient = defs.append("linearGradient")
+      .attr("id", gradientId)
+      .attr("x1", "0%").attr("y1", "0%")
+      .attr("x2", "0%").attr("y2", "100%");
+    
+    gradient.append("stop").attr("offset", "0%").attr("stop-color", color).attr("stop-opacity", 0.3);
+    gradient.append("stop").attr("offset", "100%").attr("stop-color", color).attr("stop-opacity", 0);
+
+    svg.append("path")
+      .datum(data)
+      .attr("d", area)
+      .attr("fill", `url(#${gradientId})`);
+
+    svg.append("path")
+      .datum(data)
+      .attr("d", line)
+      .attr("fill", "none")
+      .attr("stroke", color)
+      .attr("stroke-width", 1.5)
+      .attr("stroke-linecap", "round")
+      .attr("class", "drop-shadow-[0_0_3px_rgba(212,160,23,0.4)]");
+
+  }, [data, color, height, width]);
+
+  return (
+    <svg ref={svgRef} width={width} height={height} className="overflow-visible" />
+  );
+};
+
+const GlitchButton = ({ children, onClick, className, disabled, variant = 'primary' }: any) => {
+  return (
+    <motion.button
+      whileHover={!disabled ? { 
+        scale: 1.02,
+        boxShadow: variant === 'primary' ? "0 0 25px rgba(212,160,23,0.4)" : "0 0 25px rgba(255,255,255,0.1)",
+      } : {}}
+      whileTap={!disabled ? { scale: 0.98 } : {}}
+      onClick={onClick}
+      disabled={disabled}
+      className={`relative overflow-hidden group ${className}`}
+    >
+      <span className="relative z-10 flex items-center gap-3">{children}</span>
+      
+      {/* Glitch layers on hover */}
+      {!disabled && (
+        <>
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-300">
+            <div className="absolute inset-0 bg-red-500/10 translate-x-[1px] mix-blend-screen animate-pulse" />
+            <div className="absolute inset-0 bg-blue-500/10 -translate-x-[1px] mix-blend-screen animate-pulse" />
+            <motion.div 
+              className="absolute inset-0 bg-white/5"
+              animate={{ 
+                x: ["-100%", "100%"],
+              }}
+              transition={{ 
+                duration: 0.8, 
+                repeat: Infinity, 
+                ease: "linear"
+              }}
+            />
+          </div>
+          {/* Grain texture change on hover */}
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-20 pointer-events-none transition-opacity duration-300 mix-blend-overlay">
+            <svg viewBox="0 0 100 100" className="w-full h-full">
+              <filter id="buttonNoise">
+                <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch" />
+              </filter>
+              <rect width="100%" height="100%" filter="url(#buttonNoise)" />
+            </svg>
+          </div>
+        </>
+      )}
+    </motion.button>
+  );
+};
+
+const GrainOverlay = () => (
+  <div className="absolute inset-0 pointer-events-none opacity-[0.04] mix-blend-overlay z-50">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <filter id="noiseFilter">
+        <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+      </filter>
+      <rect width="100%" height="100%" filter="url(#noiseFilter)" />
+    </svg>
+  </div>
+);
+
+const ScanlineOverlay = () => (
+  <div className="absolute inset-0 pointer-events-none opacity-[0.02] z-50 overflow-hidden">
+    <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] animate-scanline"></div>
+  </div>
+);
 
 export default function Page() {
   const [request, setRequest] = useState('');
@@ -381,76 +516,89 @@ export default function Page() {
   };
 
   return (
-    <div className="flex h-screen bg-[#E5E9E8] font-sans overflow-hidden">
+    <div className="flex h-screen bg-[#E5E9E8] font-sans overflow-hidden relative">
+      <ScanlineOverlay />
+      {/* Ambient Glow Blobs */}
+      <div className="absolute -top-[10%] -left-[5%] w-[40%] h-[40%] bg-[#D4A017]/5 blur-[120px] rounded-full pointer-events-none animate-pulse"></div>
+      <div className="absolute -bottom-[10%] -right-[5%] w-[40%] h-[40%] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none animate-pulse" style={{ animationDelay: '1s' }}></div>
+      
       {/* Sidebar */}
-      <aside className="w-64 bg-[#3A4D4A] text-white flex flex-col shadow-2xl z-10 rounded-tr-[3rem] rounded-br-[3rem] my-4 ml-4 overflow-hidden relative">
-        <div className="p-8 flex flex-col items-center border-b border-[#4A5D5A]">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#D4A017] to-yellow-200 p-1 mb-4">
+      <aside className="w-64 bg-[#3A4D4A] text-white flex flex-col shadow-2xl z-10 rounded-tr-[3rem] rounded-br-[3rem] my-4 ml-4 overflow-hidden relative border-r border-white/5">
+        <GrainOverlay />
+        <div className="p-8 flex flex-col items-center border-b border-[#4A5D5A] relative z-10">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#D4A017] to-yellow-200 p-1 mb-4 shadow-[0_0_20px_rgba(212,160,23,0.3)]">
             <div className="w-full h-full bg-[#2C3E3B] rounded-full flex items-center justify-center">
-              <Rocket size={32} className="text-[#D4A017]" />
+              <Rocket size={32} className="text-[#D4A017] drop-shadow-[0_0_8px_rgba(212,160,23,0.6)]" />
             </div>
           </div>
           <h2 className="font-bold tracking-widest text-sm text-center">FUNNEL</h2>
           <p className="text-xs text-gray-400 mt-1 uppercase tracking-[0.3em]">Studio</p>
         </div>
 
-        <nav className="flex-1 py-6">
+        <nav className="flex-1 py-6 relative z-10">
           <ul className="space-y-2">
             <li className="relative">
-              {currentView === 'dashboard' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#D4A017] rounded-r-full"></div>}
-              <button onClick={() => setCurrentView('dashboard')} className={`w-full flex items-center gap-4 px-8 py-4 transition-colors ${currentView === 'dashboard' ? 'bg-white text-[#3A4D4A] rounded-l-full ml-4 shadow-md' : 'text-gray-300 hover:text-white hover:bg-[#4A5D5A]'}`}>
-                <LayoutDashboard size={20} className={currentView === 'dashboard' ? 'text-[#D4A017]' : ''} />
+              {currentView === 'dashboard' && (
+                <motion.div 
+                  layoutId="activeNav"
+                  className="absolute left-0 top-0 bottom-0 w-1 bg-[#D4A017] rounded-r-full shadow-[0_0_15px_#D4A017,0_0_5px_#D4A017]"
+                />
+              )}
+              <button onClick={() => setCurrentView('dashboard')} className={`w-full flex items-center gap-4 px-8 py-4 transition-all duration-300 relative ${currentView === 'dashboard' ? 'bg-white text-[#3A4D4A] rounded-l-full ml-4 shadow-[0_10px_30px_rgba(0,0,0,0.1)]' : 'text-gray-300 hover:text-white hover:bg-[#4A5D5A]'}`}>
+                <LayoutDashboard size={20} className={currentView === 'dashboard' ? 'text-[#D4A017] drop-shadow-[0_0_5px_rgba(212,160,23,0.5)]' : 'opacity-60'} />
                 <span className="font-bold text-sm tracking-wide">DASHBOARD</span>
               </button>
             </li>
             <li className="relative">
-              {currentView === 'generator' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#D4A017] rounded-r-full"></div>}
-              <button onClick={() => setCurrentView('generator')} className={`w-full flex items-center gap-4 px-8 py-4 transition-colors ${currentView === 'generator' ? 'bg-white text-[#3A4D4A] rounded-l-full ml-4 shadow-md' : 'text-gray-300 hover:text-white hover:bg-[#4A5D5A]'}`}>
-                <Rocket size={20} className={currentView === 'generator' ? 'text-[#D4A017]' : ''} />
+              {currentView === 'generator' && (
+                <motion.div 
+                  layoutId="activeNav"
+                  className="absolute left-0 top-0 bottom-0 w-1 bg-[#D4A017] rounded-r-full shadow-[0_0_15px_#D4A017,0_0_5px_#D4A017]"
+                />
+              )}
+              <button onClick={() => setCurrentView('generator')} className={`w-full flex items-center gap-4 px-8 py-4 transition-all duration-300 relative ${currentView === 'generator' ? 'bg-white text-[#3A4D4A] rounded-l-full ml-4 shadow-[0_10px_30px_rgba(0,0,0,0.1)]' : 'text-gray-300 hover:text-white hover:bg-[#4A5D5A]'}`}>
+                <Rocket size={20} className={currentView === 'generator' ? 'text-[#D4A017] drop-shadow-[0_0_5px_rgba(212,160,23,0.5)]' : 'opacity-60'} />
                 <span className="font-bold text-sm tracking-wide">GÉNÉRATEUR</span>
               </button>
             </li>
             <li className="relative">
-              {currentView === 'tunnels' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#D4A017] rounded-r-full"></div>}
-              <button onClick={() => setCurrentView('tunnels')} className={`w-full flex items-center gap-4 px-8 py-4 transition-colors ${currentView === 'tunnels' ? 'bg-white text-[#3A4D4A] rounded-l-full ml-4 shadow-md' : 'text-gray-300 hover:text-white hover:bg-[#4A5D5A]'}`}>
-                <FileText size={20} className={currentView === 'tunnels' ? 'text-[#D4A017]' : ''} />
+              {currentView === 'tunnels' && (
+                <motion.div 
+                  layoutId="activeNav"
+                  className="absolute left-0 top-0 bottom-0 w-1 bg-[#D4A017] rounded-r-full shadow-[0_0_15px_#D4A017,0_0_5px_#D4A017]"
+                />
+              )}
+              <button onClick={() => setCurrentView('tunnels')} className={`w-full flex items-center gap-4 px-8 py-4 transition-all duration-300 relative ${currentView === 'tunnels' ? 'bg-white text-[#3A4D4A] rounded-l-full ml-4 shadow-[0_10px_30px_rgba(0,0,0,0.1)]' : 'text-gray-300 hover:text-white hover:bg-[#4A5D5A]'}`}>
+                <FileText size={20} className={currentView === 'tunnels' ? 'text-[#D4A017] drop-shadow-[0_0_5px_rgba(212,160,23,0.5)]' : 'opacity-60'} />
                 <span className="font-bold text-sm tracking-wide">MES TUNNELS</span>
               </button>
             </li>
             <li className="relative">
-              {currentView === 'settings' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#D4A017] rounded-r-full"></div>}
-              <button onClick={() => setCurrentView('settings')} className={`w-full flex items-center gap-4 px-8 py-4 transition-colors ${currentView === 'settings' ? 'bg-white text-[#3A4D4A] rounded-l-full ml-4 shadow-md' : 'text-gray-300 hover:text-white hover:bg-[#4A5D5A]'}`}>
-                <Settings size={20} className={currentView === 'settings' ? 'text-[#D4A017]' : ''} />
+              {currentView === 'settings' && (
+                <motion.div 
+                  layoutId="activeNav"
+                  className="absolute left-0 top-0 bottom-0 w-1 bg-[#D4A017] rounded-r-full shadow-[0_0_15px_#D4A017,0_0_5px_#D4A017]"
+                />
+              )}
+              <button onClick={() => setCurrentView('settings')} className={`w-full flex items-center gap-4 px-8 py-4 transition-all duration-300 relative ${currentView === 'settings' ? 'bg-white text-[#3A4D4A] rounded-l-full ml-4 shadow-[0_10px_30px_rgba(0,0,0,0.1)]' : 'text-gray-300 hover:text-white hover:bg-[#4A5D5A]'}`}>
+                <Settings size={20} className={currentView === 'settings' ? 'text-[#D4A017] drop-shadow-[0_0_5px_rgba(212,160,23,0.5)]' : 'opacity-60'} />
                 <span className="font-bold text-sm tracking-wide">PARAMÈTRES</span>
               </button>
             </li>
           </ul>
         </nav>
         
-        <div className="p-6 border-t border-[#4A5D5A] bg-[#2C3E3B]/80 backdrop-blur-sm">
+        <div className="p-6 border-t border-[#4A5D5A] bg-[#2C3E3B]/80 backdrop-blur-sm relative z-10">
            <div className="flex items-center justify-between text-gray-300 mb-4">
              <div className="flex items-center gap-3">
                <div className="relative">
-                 <Users size={18} className="text-[#D4A017]" />
+                 <Users size={18} className="text-[#D4A017] drop-shadow-[0_0_5px_rgba(212,160,23,0.5)]" />
                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
                </div>
                <span className="font-bold text-[10px] tracking-[0.3em] text-gray-400">AGENTS ACTIFS</span>
              </div>
-             <div className="flex gap-1.5">
-               <div className="w-1 h-4 bg-red-600/40 rounded-full overflow-hidden">
-                 <motion.div 
-                   animate={{ height: ["20%", "80%", "40%", "100%", "20%"] }}
-                   transition={{ duration: 1.5, repeat: Infinity }}
-                   className="w-full bg-red-500"
-                 />
-               </div>
-               <div className="w-1 h-4 bg-red-600/40 rounded-full overflow-hidden">
-                 <motion.div 
-                   animate={{ height: ["60%", "20%", "90%", "30%", "60%"] }}
-                   transition={{ duration: 1.2, repeat: Infinity }}
-                   className="w-full bg-red-500"
-                 />
-               </div>
+             <div className="flex gap-1.5 items-center">
+               <MiniChart />
              </div>
            </div>
            
@@ -530,7 +678,7 @@ export default function Page() {
               </div>
               <div className="h-8 w-px bg-gray-200 hidden md:block"></div>
               <div className="hidden md:flex items-center gap-2 text-[10px] font-bold text-gray-400 tracking-widest uppercase">
-                <Sparkles size={14} className="text-[#D4A017]" />
+                <Sparkles size={14} className="text-[#D4A017] drop-shadow-[0_0_3px_rgba(212,160,23,0.5)]" />
                 Moteur IA v4.2
               </div>
             </div>
@@ -545,7 +693,7 @@ export default function Page() {
                 </div>
                 <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">Agents Synchronisés</span>
               </div>
-              <button 
+              <GlitchButton 
                 onClick={() => {
                   setStep('input');
                   setResult(null);
@@ -554,18 +702,22 @@ export default function Page() {
                 }}
                 className="bg-[#3A4D4A] text-white px-10 py-4 rounded-2xl text-[10px] font-black tracking-[0.3em] shadow-2xl hover:bg-[#2C3E3B] transition-all border-b-4 border-black/30 flex items-center gap-3"
               >
-                <Rocket size={16} className="text-[#D4A017]" />
+                <Rocket size={16} className="text-[#D4A017] drop-shadow-[0_0_5px_rgba(212,160,23,0.8)]" />
                 NOUVEAU PROJET
-              </button>
+              </GlitchButton>
             </div>
           </div>
 
-          {currentView === 'dashboard' && (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-8"
-            >
+          <AnimatePresence mode="wait">
+            {currentView === 'dashboard' && (
+              <motion.div 
+                key="dashboard"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="space-y-8"
+              >
               <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold text-[#3A4D4A]">Tableau de Bord</h1>
                 <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100">
@@ -576,18 +728,23 @@ export default function Page() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                  { label: 'Tunnels Générés', value: projects.length, icon: FileText, color: 'text-blue-500' },
-                  { label: 'Agents Actifs', value: '10', icon: Users, color: 'text-green-500' },
-                  { label: 'Images Créées', value: projects.filter(p => p.heroImage).length, icon: ImageIcon, color: 'text-purple-500' },
-                  { label: 'Temps Gagné', value: `${projects.length * 4}h`, icon: Sparkles, color: 'text-[#D4A017]' },
+                  { label: 'Tunnels Générés', value: projects.length, icon: FileText, color: 'text-blue-500', chartColor: '#3b82f6' },
+                  { label: 'Agents Actifs', value: '10', icon: Users, color: 'text-green-500', chartColor: '#22c55e' },
+                  { label: 'Images Créées', value: projects.filter(p => p.heroImage).length, icon: ImageIcon, color: 'text-purple-500', chartColor: '#a855f7' },
+                  { label: 'Temps Gagné', value: `${projects.length * 4}h`, icon: Sparkles, color: 'text-[#D4A017]', chartColor: '#D4A017' },
                 ].map((stat, i) => (
-                  <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center ${stat.color}`}>
-                      <stat.icon size={24} />
+                  <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col gap-4 group hover:shadow-xl transition-all duration-500">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center ${stat.color} group-hover:scale-110 transition-transform`}>
+                        <stat.icon size={24} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{stat.label}</p>
+                        <p className="text-2xl font-black text-[#3A4D4A]">{stat.value}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{stat.label}</p>
-                      <p className="text-2xl font-black text-[#3A4D4A]">{stat.value}</p>
+                    <div className="h-10 w-full flex items-end justify-center pt-2 border-t border-gray-50">
+                      <MiniChart color={stat.chartColor} width={180} height={30} />
                     </div>
                   </div>
                 ))}
@@ -652,126 +809,135 @@ export default function Page() {
           )}
 
           {currentView === 'generator' && (
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            <motion.div 
+              key="generator"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="grid grid-cols-1 xl:grid-cols-3 gap-8"
+            >
               
               {/* Left Column: Input Form */}
               <div className="xl:col-span-2 space-y-8">
-                {step === 'input' && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100"
-                  >
-                    <h1 className="text-3xl font-bold text-[#3A4D4A] mb-2">Décrivez votre offre</h1>
-                    <p className="text-gray-500 mb-6">Laissez nos agents concevoir le tunnel parfait pour vous.</p>
-                    
-                    {error && (
-                      <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm font-medium">
-                        {error}
-                      </div>
-                    )}
-
-                    <form onSubmit={handleSubmit}>
-                      <textarea
-                        className="w-full p-6 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all resize-none text-gray-700 text-lg min-h-[200px] mb-6"
-                        placeholder="Ex: Je vends une formation en ligne sur le marketing digital pour les débutants à 497€..."
-                        value={request}
-                        onChange={(e) => setRequest(e.target.value)}
-                        disabled={loading}
-                      />
+                <AnimatePresence mode="wait">
+                  {step === 'input' && (
+                    <motion.div 
+                      key="input-step"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100"
+                    >
+                      <h1 className="text-3xl font-bold text-[#3A4D4A] mb-2">Décrivez votre offre</h1>
+                      <p className="text-gray-500 mb-6">Laissez nos agents concevoir le tunnel parfait pour vous.</p>
                       
-                      <div className="flex justify-end">
-                        <motion.button
-                          whileHover={!loading ? { scale: 1.02 } : {}}
-                          whileTap={!loading ? { scale: 0.98 } : {}}
-                          type="submit"
-                          className={`px-8 py-4 rounded-full font-bold text-base tracking-wide shadow-lg transition-all flex items-center gap-3 ${
-                            loading 
-                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' 
-                              : 'bg-[#D4A017] hover:bg-yellow-600 text-white'
-                          }`}
-                          disabled={loading || !request.trim()}
+                      {error && (
+                        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm font-medium">
+                          {error}
+                        </div>
+                      )}
+
+                      <form onSubmit={handleSubmit}>
+                        <textarea
+                          className="w-full p-6 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all resize-none text-gray-700 text-lg min-h-[200px] mb-6"
+                          placeholder="Ex: Je vends une formation en ligne sur le marketing digital pour les débutants à 497€..."
+                          value={request}
+                          onChange={(e) => setRequest(e.target.value)}
+                          disabled={loading}
+                        />
+                        
+                        <div className="flex justify-end">
+                          <GlitchButton
+                            type="submit"
+                            className={`px-8 py-4 rounded-full font-bold text-base tracking-wide shadow-lg transition-all flex items-center gap-3 ${
+                              loading 
+                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' 
+                                : 'bg-[#D4A017] hover:bg-yellow-600 text-white'
+                            }`}
+                            disabled={loading || !request.trim()}
+                          >
+                            {loading ? 'ANALYSE EN COURS...' : 'ANALYSER L\'OFFRE'}
+                            {!loading && <ArrowRight size={18} />}
+                          </GlitchButton>
+                        </div>
+                      </form>
+                    </motion.div>
+                  )}
+
+                  {step === 'review' && parsedIntent && (
+                    <motion.div 
+                      key="review-step"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100"
+                    >
+                      <h1 className="text-3xl font-bold text-[#3A4D4A] mb-2">Vérification de l&apos;offre</h1>
+                      <p className="text-gray-500 mb-6">Corrigez les informations ci-dessous avant de générer le tunnel pour éviter les hallucinations.</p>
+                      
+                      {error && (
+                        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm font-medium">
+                          {error}
+                        </div>
+                      )}
+
+                      <div className="space-y-4 mb-8">
+                        <div>
+                          <label className="block text-sm font-bold text-[#3A4D4A] mb-1">Nom du Produit / Service</label>
+                          <input 
+                            type="text" 
+                            className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all text-gray-800"
+                            value={parsedIntent.product_name || ''}
+                            onChange={(e) => setParsedIntent({...parsedIntent, product_name: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#3A4D4A] mb-1">Prix</label>
+                          <input 
+                            type="text" 
+                            className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all text-gray-800"
+                            value={parsedIntent.price || ''}
+                            onChange={(e) => setParsedIntent({...parsedIntent, price: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#3A4D4A] mb-1">Audience Cible</label>
+                          <input 
+                            type="text" 
+                            className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all text-gray-800"
+                            value={parsedIntent.suspected_audience || ''}
+                            onChange={(e) => setParsedIntent({...parsedIntent, suspected_audience: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#3A4D4A] mb-1">Promesse Principale</label>
+                          <textarea 
+                            className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all resize-none h-24 text-gray-800"
+                            value={parsedIntent.core_promise || ''}
+                            onChange={(e) => setParsedIntent({...parsedIntent, core_promise: e.target.value})}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between">
+                        <button
+                          onClick={() => setStep('input')}
+                          className="px-6 py-3 rounded-full font-bold text-sm text-gray-500 hover:bg-gray-100 transition-colors"
                         >
-                          {loading ? 'ANALYSE EN COURS...' : 'ANALYSER L\'OFFRE'}
-                          {!loading && <ArrowRight size={18} />}
-                        </motion.button>
+                          RETOUR
+                        </button>
+                        <GlitchButton
+                          onClick={handleConfirmIntent}
+                          className="px-8 py-4 rounded-full font-bold text-base tracking-wide shadow-lg transition-all flex items-center gap-3 bg-[#D4A017] hover:bg-yellow-600 text-white"
+                        >
+                          CONFIRMER ET GÉNÉRER LE TUNNEL
+                          <ArrowRight size={18} />
+                        </GlitchButton>
                       </div>
-                    </form>
-                  </motion.div>
-                )}
-
-                {step === 'review' && parsedIntent && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100"
-                  >
-                    <h1 className="text-3xl font-bold text-[#3A4D4A] mb-2">Vérification de l&apos;offre</h1>
-                    <p className="text-gray-500 mb-6">Corrigez les informations ci-dessous avant de générer le tunnel pour éviter les hallucinations.</p>
-                    
-                    {error && (
-                      <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm font-medium">
-                        {error}
-                      </div>
-                    )}
-
-                    <div className="space-y-4 mb-8">
-                      <div>
-                        <label className="block text-sm font-bold text-[#3A4D4A] mb-1">Nom du Produit / Service</label>
-                        <input 
-                          type="text" 
-                          className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all text-gray-800"
-                          value={parsedIntent.product_name || ''}
-                          onChange={(e) => setParsedIntent({...parsedIntent, product_name: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-[#3A4D4A] mb-1">Prix</label>
-                        <input 
-                          type="text" 
-                          className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all text-gray-800"
-                          value={parsedIntent.price || ''}
-                          onChange={(e) => setParsedIntent({...parsedIntent, price: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-[#3A4D4A] mb-1">Audience Cible</label>
-                        <input 
-                          type="text" 
-                          className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all text-gray-800"
-                          value={parsedIntent.suspected_audience || ''}
-                          onChange={(e) => setParsedIntent({...parsedIntent, suspected_audience: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-[#3A4D4A] mb-1">Promesse Principale</label>
-                        <textarea 
-                          className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all resize-none h-24 text-gray-800"
-                          value={parsedIntent.core_promise || ''}
-                          onChange={(e) => setParsedIntent({...parsedIntent, core_promise: e.target.value})}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between">
-                      <button
-                        onClick={() => setStep('input')}
-                        className="px-6 py-3 rounded-full font-bold text-sm text-gray-500 hover:bg-gray-100 transition-colors"
-                      >
-                        RETOUR
-                      </button>
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={handleConfirmIntent}
-                        className="px-8 py-4 rounded-full font-bold text-base tracking-wide shadow-lg transition-all flex items-center gap-3 bg-[#D4A017] hover:bg-yellow-600 text-white"
-                      >
-                        CONFIRMER ET GÉNÉRER LE TUNNEL
-                        <ArrowRight size={18} />
-                      </motion.button>
-                    </div>
-                  </motion.div>
-                )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* K2000 Loading Animation */}
                 <AnimatePresence>
@@ -918,11 +1084,18 @@ export default function Page() {
                 </div>
               </div>
 
-            </div>
+            </motion.div>
           )}
 
           {currentView === 'tunnels' && (
-            <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
+            <motion.div 
+              key="tunnels"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100"
+            >
               <div className="flex items-center justify-between mb-8">
                 <div>
                   <h2 className="text-3xl font-bold text-[#3A4D4A]">Mes Tunnels</h2>
@@ -980,13 +1153,16 @@ export default function Page() {
                   ))}
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
 
           {currentView === 'settings' && (
             <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              key="settings"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
               className="grid grid-cols-1 lg:grid-cols-3 gap-8"
             >
               <div className="lg:col-span-2 space-y-8">
@@ -1086,6 +1262,7 @@ export default function Page() {
               </div>
             </motion.div>
           )}
+          </AnimatePresence>
         </div>
       </main>
 
