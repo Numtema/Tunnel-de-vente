@@ -32,7 +32,8 @@ DIRECTIVES CRITIQUES DE DESIGN (Gusten Sun Method):
    - "Give your design space to breath": Utilise des marges généreuses (30px, 50px).
 
 5. IMAGES & VISUALS:
-   - Utilise les prompts de 'imagePrompts' pour insérer des placeholders d'images descriptifs (ex: <div class="image-placeholder" data-prompt="...">).
+   - Si 'hasHeroImage' est vrai dans les données, utilise impérativement la chaîne de caractères "[heroImage]" comme source pour l'image principale du Hero (ex: <img src="[heroImage]" ...>).
+   - Pour les autres images, utilise les prompts de 'imagePrompts' pour insérer des placeholders d'images descriptifs (ex: <div class="image-placeholder" data-prompt="...">).
    - Utilise des icônes Lucide ou FontAwesome si nécessaire.
 
 6. CONTRAST & BRANDING:

@@ -159,7 +159,7 @@ export default function Page() {
     
     setIsGeneratingImage(true);
     try {
-      const res = await imageGenerationAgent(result);
+      const res = await imageGenerationAgent({ intent: result.intent.data, branding: result.branding.data });
       if (res.success && res.data?.imageUrl) {
         const updatedProjects = projects.map(p => {
           if (p.id === currentProjectId) {
@@ -169,6 +169,15 @@ export default function Page() {
         });
         setProjects(updatedProjects);
         await set('ai_funnel_projects', updatedProjects);
+        
+        // Update current result with the new image
+        const updatedResult = { ...result, heroImage: res.data.imageUrl };
+        setResult(updatedResult);
+        
+        // If preview is open, update it too
+        if (preview) {
+          setPreview({ ...preview, heroImage: res.data.imageUrl });
+        }
       }
     } catch (error) {
       console.error(error);
@@ -223,6 +232,18 @@ export default function Page() {
       const imageRes = await imageDirectionAgent(intentRes.data);
       const proofRes = await proofNumbersAgent(intentRes.data);
       const interactionRes = await interactionMotionAgent(layoutRes.data);
+      
+      // Generate Hero Image
+      let heroImageUrl = undefined;
+      try {
+        const imgRes = await imageGenerationAgent({ intent: intentRes.data, branding: brandRes.data });
+        if (imgRes.success && imgRes.data?.imageUrl) {
+          heroImageUrl = imgRes.data.imageUrl;
+        }
+      } catch (e) {
+        console.error("Hero image generation failed", e);
+      }
+
       const frontendRes = await frontendAssemblyAgent({
         intent: intentRes.data,
         structure: structureRes.data,
@@ -234,7 +255,8 @@ export default function Page() {
         branding: brandRes.data,
         images: imageRes.data,
         proof: proofRes.data,
-        interaction: interactionRes.data
+        interaction: interactionRes.data,
+        hasHeroImage: !!heroImageUrl
       });
       const finalResult = { 
         intent: intentRes, 
@@ -248,7 +270,8 @@ export default function Page() {
         images: imageRes,
         proof: proofRes,
         interaction: interactionRes,
-        frontend: frontendRes
+        frontend: frontendRes,
+        heroImage: heroImageUrl
       };
       setResult(finalResult);
       setStep('result');
@@ -290,7 +313,11 @@ export default function Page() {
 
   const downloadCombinedHtml = () => {
     if (!preview) return;
-    const combined = preview.index_html
+    let indexHtml = preview.index_html;
+    if (preview.heroImage) {
+      indexHtml = indexHtml.replace(/\[heroImage\]/g, preview.heroImage);
+    }
+    const combined = indexHtml
       .replace('</head>', `<style>${preview.styles_css}</style></head>`)
       .replace('</body>', `<script>${preview.script_js}</script></body>`);
     downloadFile('funnel-combined.html', combined);
@@ -299,7 +326,19 @@ export default function Page() {
   const downloadZip = async () => {
     if (!preview) return;
     const zip = new JSZip();
-    zip.file("index.html", preview.index_html);
+    let indexHtml = preview.index_html;
+    
+    // Add hero image if it exists
+    if (preview.heroImage) {
+      const base64Data = preview.heroImage.split(',')[1];
+      if (base64Data) {
+        zip.file("hero.png", base64Data, { base64: true });
+        // Update index.html to point to the local file in the ZIP
+        indexHtml = indexHtml.replace(/\[heroImage\]/g, "hero.png");
+      }
+    }
+    
+    zip.file("index.html", indexHtml);
     zip.file("styles.css", preview.styles_css);
     zip.file("script.js", preview.script_js);
     
@@ -314,6 +353,10 @@ export default function Page() {
 
   const getSrcDoc = () => {
     if (!preview) return '';
+    let indexHtml = preview.index_html;
+    if (preview.heroImage) {
+      indexHtml = indexHtml.replace(/\[heroImage\]/g, preview.heroImage);
+    }
     return `
       <!DOCTYPE html>
       <html lang="fr">
@@ -323,7 +366,7 @@ export default function Page() {
           <style>${preview.styles_css}</style>
         </head>
         <body>
-          ${preview.index_html}
+          ${indexHtml}
           <script>${preview.script_js}</script>
         </body>
       </html>
@@ -651,7 +694,7 @@ export default function Page() {
                           {isGeneratingImage ? 'GÉNÉRATION...' : 'GÉNÉRER IMAGE'}
                         </button>
                         <button 
-                          onClick={() => setPreview(result.frontend.data)} 
+                          onClick={() => setPreview({ ...result.frontend.data, heroImage: result.heroImage })} 
                           className="bg-[#3A4D4A] hover:bg-[#2C3E3B] text-white px-6 py-3 rounded-full text-sm font-bold shadow-md transition-colors flex items-center gap-2"
                         >
                           <Maximize2 size={16} />
@@ -867,6 +910,21 @@ export default function Page() {
                 <button onClick={() => downloadFile('index.html', preview.index_html)} className="bg-gray-50 hover:bg-gray-100 border border-gray-200 text-[#3A4D4A] px-6 py-2.5 rounded-full text-sm font-bold tracking-wide transition-colors flex items-center gap-2"><Download size={16}/> INDEX.HTML</button>
                 <button onClick={() => downloadFile('styles.css', preview.styles_css)} className="bg-gray-50 hover:bg-gray-100 border border-gray-200 text-[#3A4D4A] px-6 py-2.5 rounded-full text-sm font-bold tracking-wide transition-colors flex items-center gap-2"><Download size={16}/> STYLES.CSS</button>
                 <button onClick={() => downloadFile('script.js', preview.script_js)} className="bg-gray-50 hover:bg-gray-100 border border-gray-200 text-[#3A4D4A] px-6 py-2.5 rounded-full text-sm font-bold tracking-wide transition-colors flex items-center gap-2"><Download size={16}/> SCRIPT.JS</button>
+                
+                {preview.heroImage && (
+                  <button 
+                    onClick={() => {
+                      const link = document.createElement('a');
+                      link.href = preview.heroImage;
+                      link.download = 'hero-image.png';
+                      link.click();
+                    }} 
+                    className="bg-gray-50 hover:bg-gray-100 border border-gray-200 text-[#D4A017] px-6 py-2.5 rounded-full text-sm font-bold tracking-wide transition-colors flex items-center gap-2"
+                  >
+                    <ImageIcon size={16}/> IMAGE HERO
+                  </button>
+                )}
+
                 <div className="hidden sm:block w-px h-10 bg-gray-300 mx-2"></div>
                 <button onClick={downloadCombinedHtml} className="bg-[#D4A017]/10 text-[#D4A017] border border-[#D4A017]/30 hover:bg-[#D4A017]/20 px-6 py-2.5 rounded-full text-sm font-bold tracking-wide transition-colors flex items-center gap-2"><FileCode2 size={16}/> HTML COMBINÉ</button>
                 <button onClick={downloadZip} className="bg-[#3A4D4A] text-white hover:bg-[#2C3E3B] px-6 py-2.5 rounded-full text-sm font-bold tracking-wide transition-colors flex items-center gap-2 shadow-md"><FileArchive size={16}/> EXPORTER ZIP</button>
