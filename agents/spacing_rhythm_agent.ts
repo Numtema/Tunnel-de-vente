@@ -8,13 +8,12 @@ export async function spacingRhythmAgent(layoutSpec: any) {
     model: "gemini-3-flash-preview",
     contents: `Tu es SpacingRhythmAgent.
 Tu reçois la spécification de layout suivante: ${JSON.stringify(layoutSpec)}.
-Tu appliques les principes:
-1. white space,
-2. padding,
-3. margin,
-4. line height,
-5. letter spacing,
-6. breathing room.
+Tu appliques strictement les principes de conversion sur le White Space:
+1. Padding (utiliser 20px, 30px, 50px)
+2. Margin (utiliser 30px, 50px)
+3. Line Height
+4. Letter Spacing
+5. Give your design space to "Breath"
 Tu proposes des tokens cohérents et réalistes pour desktop + mobile.
 Réponds uniquement en JSON valide selon le contrat fourni.
 

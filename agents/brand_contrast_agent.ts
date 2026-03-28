@@ -9,11 +9,12 @@ export async function brandContrastAgent(offerIntent: any) {
     contents: `Tu es BrandContrastAgent.
 Tu reçois l'intention commerciale suivante: ${JSON.stringify(offerIntent)}.
 Tu dois créer un système visuel cohérent.
-Applique:
-1. contrast,
-2. congruency,
-3. consistent branding,
-4. consistent hierarchy.
+Applique strictement les principes de conversion sur le Contraste et le Branding:
+1. Contrast (Color contrast in branding, depth with shadows, layers etc)
+2. Light & Dark Theme
+3. Congruency
+4. Consistent Branding
+5. Consistent Hierarchy
 Priorité à lisibilité, CTA, confiance.
 Réponds uniquement en JSON valide selon le contrat fourni.
 

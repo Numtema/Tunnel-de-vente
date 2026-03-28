@@ -9,10 +9,10 @@ export async function funnelStructureAgent(offerIntent: any) {
     contents: `Tu es FunnelStructureAgent.
 Tu reçois l'intention commerciale suivante: ${JSON.stringify(offerIntent)}.
 Applique la logique du document Funnel Designer:
-1. 3 points of focus,
-2. une seule direction vers l’offre,
-3. hiérarchie claire,
-4. ordre narratif cohérent.
+1. 3 points of focus (Main, Second, Third),
+2. CA.DA.CA. (Capture, Direct, Convert, Attention),
+3. Consistent Hierarchy (hiérarchie claire et constante),
+4. Ordre narratif cohérent.
 Propose la structure la plus convertible.
 Réponds uniquement en JSON valide selon le contrat fourni.
 
@@ -33,6 +33,12 @@ Contrat JSON:
       "main": "string",
       "secondary": "string",
       "tertiary": "string"
+    },
+    "cadaca_strategy": {
+      "capture": "string",
+      "direct": "string",
+      "convert": "string",
+      "attention": "string"
     }
   },
   "issues": [],

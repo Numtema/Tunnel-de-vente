@@ -8,12 +8,12 @@ export async function interactionMotionAgent(layoutSpec: any) {
     model: "gemini-3-flash-preview",
     contents: `Tu es InteractionMotionAgent.
 Tu reçois la spécification de layout suivante: ${JSON.stringify(layoutSpec)}.
-Applique le principe Interaction.
-Ne propose que des interactions utiles à la conversion:
-1. claires,
-2. légères,
-3. non distrayantes,
-4. faciles à coder en JS vanilla.
+Applique strictement le principe de conversion Interaction:
+1. Visuals like video auto-play, GIF's, animations and hover effects
+2. Ne propose que des interactions utiles à la conversion
+3. Claires et légères
+4. Non distrayantes
+5. Faciles à coder en JS vanilla ou CSS Tailwind.
 Réponds uniquement en JSON valide selon le contrat fourni.
 
 Contrat JSON:

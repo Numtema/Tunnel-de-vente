@@ -8,10 +8,10 @@ export async function proofNumbersAgent(offerIntent: any) {
     model: "gemini-3-flash-preview",
     contents: `Tu es ProofNumbersAgent.
 Tu reçois l'intention commerciale suivante: ${JSON.stringify(offerIntent)}.
-Applique le principe Numbers:
-1. attirer l’attention,
-2. construire la confiance,
-3. rendre la preuve visible.
+Applique strictement le principe de conversion Numbers:
+1. Get attention with numbers
+2. Build trust with data & stats
+3. Rendre la preuve visible
 S’il manque de vraies preuves, signale-le.
 N’invente pas de données factuelles.
 Réponds uniquement en JSON valide selon le contrat fourni.

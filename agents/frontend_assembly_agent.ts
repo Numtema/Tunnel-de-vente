@@ -8,14 +8,18 @@ export async function frontendAssemblyAgent(data: any) {
     model: "gemini-3-flash-preview",
     contents: `Tu es FrontendAssemblyAgent.
 Tu assembles un tunnel complet en HTML/CSS/JS vanilla basé sur les données suivantes: ${JSON.stringify(data)}.
-Respecte strictement:
-1. hiérarchie visuelle,
-2. sections prévues,
-3. CTA cohérents,
-4. responsive,
-5. accessibilité de base,
-6. classes lisibles,
-7. code propre et modulaire.
+Respecte strictement les 7 principes de conversion:
+1. Layout (Section, Row, Column)
+2. Size (H1/92px, H2/56px, Body/26px, Para/24px)
+3. White Space (Padding 20/30/50px, Margin 30/50px)
+4. Contrast (Light/Dark Theme, Congruency)
+5. Direction (Arrows, graphics)
+6. Numbers (Data & stats)
+7. Interaction (Animations, hover effects)
+Ainsi que:
+8. CA.DA.CA. (Capture, Direct, Convert, Attention)
+9. Consistent Hierarchy & Branding
+10. Responsive et code propre.
 Retourne les trois fichiers en texte intégral dans le JSON.
 Réponds uniquement en JSON valide selon le contrat fourni.
 

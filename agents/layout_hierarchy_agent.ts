@@ -8,13 +8,11 @@ export async function layoutHierarchyAgent(funnelStructure: any) {
     model: "gemini-3-flash-preview",
     contents: `Tu es LayoutHierarchyAgent.
 Tu reçois la structure du funnel suivante: ${JSON.stringify(funnelStructure)}.
-Applique strictement:
-1. hierarchy,
-2. main / second / third focus,
-3. layout,
-4. alignment,
-5. grouping,
-6. section / row / column.
+Applique strictement les 7 principes de conversion, en particulier:
+1. Layout (Section, Row, Column, Structure)
+2. Size (Headline Size: H1/92px, H2/56px, Text Size: Body/26px, Para/24px)
+3. Image and font size, thickness in order of importance
+4. Alignment & Grouping
 Tu produis une spécification de structure, pas du CSS final.
 Réponds uniquement en JSON valide selon le contrat fourni.
 
@@ -33,6 +31,12 @@ Contrat JSON:
         "secondary_focus": "string",
         "tertiary_focus": "string"
       }
+    },
+    "typography_sizes": {
+      "h1": "92px",
+      "h2": "56px",
+      "body": "26px",
+      "paragraph": "24px"
     },
     "alignment_rules": ["string"],
     "grouping_rules": ["string"],
