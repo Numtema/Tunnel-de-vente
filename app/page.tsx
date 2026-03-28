@@ -73,6 +73,8 @@ export default function Page() {
   const [request, setRequest] = useState('');
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState<'input' | 'review' | 'generating' | 'result'>('input');
+  const [parsedIntent, setParsedIntent] = useState<any>(null);
   const [preview, setPreview] = useState<any>(null);
   const [previewMode, setPreviewMode] = useState<'mobile' | 'desktop'>('desktop');
   const [previewTab, setPreviewTab] = useState<'visual' | 'code'>('visual');
@@ -116,6 +118,7 @@ export default function Page() {
       setCurrentProjectId(null);
       setResult(null);
       setRequest('');
+      setStep('input');
     }
   };
 
@@ -123,6 +126,7 @@ export default function Page() {
     setCurrentProjectId(project.id);
     setResult(project.result);
     setRequest(project.request);
+    setStep('result');
     setCurrentView('generator');
   };
 
@@ -153,6 +157,8 @@ export default function Page() {
     setCurrentProjectId(null);
     setResult(null);
     setRequest('');
+    setStep('input');
+    setParsedIntent(null);
     setCurrentView('generator');
   };
 
@@ -162,6 +168,20 @@ export default function Page() {
     setResult(null);
     try {
       const intentRes = await offerIntentAgent(request);
+      setParsedIntent(intentRes.data);
+      setStep('review');
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirmIntent = async () => {
+    setLoading(true);
+    setStep('generating');
+    try {
+      const intentRes = { data: parsedIntent };
       const structureRes = await funnelStructureAgent(intentRes.data);
       const headlineRes = await headlineCopyAgent(structureRes.data);
       const layoutRes = await layoutHierarchyAgent(structureRes.data);
@@ -194,6 +214,7 @@ export default function Page() {
         frontend: frontendRes
       };
       setResult(finalResult);
+      setStep('result');
       if (!currentProjectId) {
         saveProject(finalResult, request);
       } else {
@@ -209,6 +230,7 @@ export default function Page() {
       }
     } catch (error) {
       console.error(error);
+      setStep('review');
     } finally {
       setLoading(false);
     }
@@ -361,74 +383,143 @@ export default function Page() {
               
               {/* Left Column: Input Form */}
               <div className="xl:col-span-2 space-y-8">
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100"
-                >
-                  <h1 className="text-3xl font-bold text-[#3A4D4A] mb-2">Décrivez votre offre</h1>
-                  <p className="text-gray-500 mb-6">Laissez nos agents concevoir le tunnel parfait pour vous.</p>
-                  
-                  <form onSubmit={handleSubmit}>
-                    <textarea
-                      className="w-full p-6 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all resize-none text-gray-700 text-lg min-h-[200px] mb-6"
-                      placeholder="Ex: Je vends une formation en ligne sur le marketing digital pour les débutants à 497€..."
-                      value={request}
-                      onChange={(e) => setRequest(e.target.value)}
-                      disabled={loading}
-                    />
+                {step === 'input' && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100"
+                  >
+                    <h1 className="text-3xl font-bold text-[#3A4D4A] mb-2">Décrivez votre offre</h1>
+                    <p className="text-gray-500 mb-6">Laissez nos agents concevoir le tunnel parfait pour vous.</p>
                     
-                    <div className="flex justify-end">
-                      <motion.button
-                        whileHover={!loading ? { scale: 1.02 } : {}}
-                        whileTap={!loading ? { scale: 0.98 } : {}}
-                        type="submit"
-                        className={`px-8 py-4 rounded-full font-bold text-base tracking-wide shadow-lg transition-all flex items-center gap-3 ${
-                          loading 
-                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' 
-                            : 'bg-[#D4A017] hover:bg-yellow-600 text-white'
-                        }`}
-                        disabled={loading || !request.trim()}
+                    <form onSubmit={handleSubmit}>
+                      <textarea
+                        className="w-full p-6 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all resize-none text-gray-700 text-lg min-h-[200px] mb-6"
+                        placeholder="Ex: Je vends une formation en ligne sur le marketing digital pour les débutants à 497€..."
+                        value={request}
+                        onChange={(e) => setRequest(e.target.value)}
+                        disabled={loading}
+                      />
+                      
+                      <div className="flex justify-end">
+                        <motion.button
+                          whileHover={!loading ? { scale: 1.02 } : {}}
+                          whileTap={!loading ? { scale: 0.98 } : {}}
+                          type="submit"
+                          className={`px-8 py-4 rounded-full font-bold text-base tracking-wide shadow-lg transition-all flex items-center gap-3 ${
+                            loading 
+                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' 
+                              : 'bg-[#D4A017] hover:bg-yellow-600 text-white'
+                          }`}
+                          disabled={loading || !request.trim()}
+                        >
+                          {loading ? 'ANALYSE EN COURS...' : 'ANALYSER L\'OFFRE'}
+                          {!loading && <ArrowRight size={18} />}
+                        </motion.button>
+                      </div>
+                    </form>
+                  </motion.div>
+                )}
+
+                {step === 'review' && parsedIntent && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100"
+                  >
+                    <h1 className="text-3xl font-bold text-[#3A4D4A] mb-2">Vérification de l&apos;offre</h1>
+                    <p className="text-gray-500 mb-6">Corrigez les informations ci-dessous avant de générer le tunnel pour éviter les hallucinations.</p>
+                    
+                    <div className="space-y-4 mb-8">
+                      <div>
+                        <label className="block text-sm font-bold text-[#3A4D4A] mb-1">Nom du Produit / Service</label>
+                        <input 
+                          type="text" 
+                          className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all"
+                          value={parsedIntent.product_name || ''}
+                          onChange={(e) => setParsedIntent({...parsedIntent, product_name: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-[#3A4D4A] mb-1">Prix</label>
+                        <input 
+                          type="text" 
+                          className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all"
+                          value={parsedIntent.price || ''}
+                          onChange={(e) => setParsedIntent({...parsedIntent, price: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-[#3A4D4A] mb-1">Audience Cible</label>
+                        <input 
+                          type="text" 
+                          className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all"
+                          value={parsedIntent.suspected_audience || ''}
+                          onChange={(e) => setParsedIntent({...parsedIntent, suspected_audience: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-[#3A4D4A] mb-1">Promesse Principale</label>
+                        <textarea 
+                          className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all resize-none h-24"
+                          value={parsedIntent.core_promise || ''}
+                          onChange={(e) => setParsedIntent({...parsedIntent, core_promise: e.target.value})}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <button
+                        onClick={() => setStep('input')}
+                        className="px-6 py-3 rounded-full font-bold text-sm text-gray-500 hover:bg-gray-100 transition-colors"
                       >
-                        {loading ? 'ANALYSE EN COURS...' : 'GÉNÉRER LE TUNNEL'}
-                        {!loading && <ArrowRight size={18} />}
+                        RETOUR
+                      </button>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleConfirmIntent}
+                        className="px-8 py-4 rounded-full font-bold text-base tracking-wide shadow-lg transition-all flex items-center gap-3 bg-[#D4A017] hover:bg-yellow-600 text-white"
+                      >
+                        CONFIRMER ET GÉNÉRER LE TUNNEL
+                        <ArrowRight size={18} />
                       </motion.button>
                     </div>
-                  </form>
+                  </motion.div>
+                )}
 
-                  {/* K2000 Loading Animation */}
-                  <AnimatePresence>
-                    {loading && (
-                      <motion.div 
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="w-full mt-8 overflow-hidden"
-                      >
-                        <div className="flex justify-between text-xs font-bold text-[#3A4D4A] mb-2 uppercase tracking-widest">
-                          <span>Synchronisation des agents</span>
-                          <span className="text-[#D4A017]">En cours</span>
-                        </div>
-                        <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden relative">
-                          <motion.div
-                            className="absolute top-0 bottom-0 w-1/4 bg-[#D4A017] rounded-full shadow-[0_0_10px_rgba(212,160,23,0.8)]"
-                            animate={{ 
-                              left: ["-25%", "100%", "-25%"] 
-                            }}
-                            transition={{ 
-                              duration: 1.5, 
-                              repeat: Infinity, 
-                              ease: "linear" 
-                            }}
-                          />
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
+                {/* K2000 Loading Animation */}
+                <AnimatePresence>
+                  {loading && step === 'generating' && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 w-full overflow-hidden"
+                    >
+                      <div className="flex justify-between text-xs font-bold text-[#3A4D4A] mb-2 uppercase tracking-widest">
+                        <span>Synchronisation des agents</span>
+                        <span className="text-[#D4A017]">En cours</span>
+                      </div>
+                      <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden relative">
+                        <motion.div
+                          className="absolute top-0 bottom-0 w-1/4 bg-[#D4A017] rounded-full shadow-[0_0_10px_rgba(212,160,23,0.8)]"
+                          animate={{ 
+                            left: ["-25%", "100%", "-25%"] 
+                          }}
+                          transition={{ 
+                            duration: 1.5, 
+                            repeat: Infinity, 
+                            ease: "linear" 
+                          }}
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Results Area */}
-                {result && !loading && (
+                {step === 'result' && result && !loading && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -502,11 +593,11 @@ export default function Page() {
                   </h3>
                   <div className="space-y-4 relative z-10">
                     {[
-                      { name: 'Intent Analysis', status: result ? 'Terminé' : loading ? 'En cours' : 'En attente' },
-                      { name: 'Funnel Structure', status: result ? 'Terminé' : loading ? 'En cours' : 'En attente' },
-                      { name: 'Copywriting', status: result ? 'Terminé' : loading ? 'En cours' : 'En attente' },
-                      { name: 'UI/UX Design', status: result ? 'Terminé' : loading ? 'En cours' : 'En attente' },
-                      { name: 'Code Generation', status: result ? 'Terminé' : loading ? 'En cours' : 'En attente' },
+                      { name: 'Intent Analysis', status: step === 'review' || step === 'generating' || step === 'result' ? 'Terminé' : (loading && step === 'input' ? 'En cours' : 'En attente') },
+                      { name: 'Funnel Structure', status: step === 'result' ? 'Terminé' : (loading && step === 'generating' ? 'En cours' : 'En attente') },
+                      { name: 'Copywriting', status: step === 'result' ? 'Terminé' : (loading && step === 'generating' ? 'En cours' : 'En attente') },
+                      { name: 'UI/UX Design', status: step === 'result' ? 'Terminé' : (loading && step === 'generating' ? 'En cours' : 'En attente') },
+                      { name: 'Code Generation', status: step === 'result' ? 'Terminé' : (loading && step === 'generating' ? 'En cours' : 'En attente') },
                     ].map((agent, i) => (
                       <div key={i} className="flex items-center justify-between border-b border-[#4A5D5A] pb-2 last:border-0">
                         <span className="text-sm text-gray-300">{agent.name}</span>

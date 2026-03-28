@@ -25,16 +25,18 @@ Contrat JSON:
   "task_id": "offer_intent_01",
   "confidence": 0.9,
   "summary": "Analyse de l'intention commerciale",
-  "data": {
-    "offer_type": "string",
-    "market_category": "string",
-    "primary_goal": "lead|sale|booking|application|webinar",
-    "suspected_audience": "string",
-    "core_promise": "string",
-    "cta_goal": "string",
-    "funnel_type": "optin|sales_page|application|vsl|webinar",
-    "missing_fields": ["string"]
-  },
+    "data": {
+      "product_name": "string",
+      "price": "string",
+      "offer_type": "string",
+      "market_category": "string",
+      "primary_goal": "lead|sale|booking|application|webinar",
+      "suspected_audience": "string",
+      "core_promise": "string",
+      "cta_goal": "string",
+      "funnel_type": "optin|sales_page|application|vsl|webinar",
+      "missing_fields": ["string"]
+    },
   "issues": [],
   "next_actions": []
 }
