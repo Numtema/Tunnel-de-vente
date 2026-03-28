@@ -214,8 +214,9 @@ export default function Page() {
   const [request, setRequest] = useState('');
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState<'template-selection' | 'input' | 'review' | 'generating' | 'result'>('template-selection');
+  const [step, setStep] = useState<'template-selection' | 'customize' | 'input' | 'review' | 'generating' | 'result'>('template-selection');
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [brandingOverrides, setBrandingOverrides] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [parsedIntent, setParsedIntent] = useState<any>(null);
   const [preview, setPreview] = useState<any>(null);
@@ -332,6 +333,7 @@ export default function Page() {
     setRequest('');
     setStep('template-selection');
     setSelectedTemplate(null);
+    setBrandingOverrides(null);
     setParsedIntent(null);
     setCurrentView('generator');
   };
@@ -398,7 +400,8 @@ export default function Page() {
         proof: proofRes.data,
         interaction: interactionRes.data,
         hasHeroImage: !!heroImageUrl,
-        template: selectedTemplate
+        template: selectedTemplate,
+        brandingOverrides: brandingOverrides
       });
       const finalResult = { 
         intent: intentRes, 
@@ -857,7 +860,8 @@ export default function Page() {
                               key={template.id}
                               onClick={() => {
                                 setSelectedTemplate(template);
-                                setStep('input');
+                                setBrandingOverrides(template.config.branding);
+                                setStep('customize');
                               }}
                               className="group relative flex flex-col overflow-hidden rounded-3xl border-2 border-transparent hover:border-[#D4A017] transition-all text-left bg-white shadow-sm hover:shadow-xl"
                             >
@@ -873,6 +877,106 @@ export default function Page() {
                               </div>
                             </button>
                           ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {step === 'customize' && selectedTemplate && (
+                    <motion.div 
+                      key="customize-step"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      className="space-y-8"
+                    >
+                      <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
+                        <div className="flex items-center justify-between mb-8">
+                          <div>
+                            <h1 className="text-3xl font-bold text-[#3A4D4A] mb-2">Personnalisation</h1>
+                            <p className="text-gray-500">Ajustez l&apos;identité visuelle du template.</p>
+                          </div>
+                          <div className="flex gap-3">
+                            <button 
+                              onClick={() => setStep('template-selection')}
+                              className="px-6 py-2 rounded-xl text-[10px] font-bold text-gray-400 hover:text-[#3A4D4A] transition-colors"
+                            >
+                              RETOUR
+                            </button>
+                            <GlitchButton 
+                              onClick={() => setStep('input')}
+                              className="bg-[#D4A017] text-white px-8 py-2 rounded-xl text-[10px] font-black tracking-widest"
+                            >
+                              CONTINUER
+                            </GlitchButton>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                          <div className="space-y-6">
+                            <h3 className="text-sm font-bold text-[#3A4D4A] uppercase tracking-wider">Couleurs du Template</h3>
+                            
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-lg border border-gray-200" style={{ backgroundColor: brandingOverrides.primaryColor }} />
+                                  <span className="text-xs font-bold text-[#3A4D4A]">Couleur Primaire (Boutons, Accents)</span>
+                                </div>
+                                <input 
+                                  type="color" 
+                                  value={brandingOverrides.primaryColor}
+                                  onChange={(e) => setBrandingOverrides({ ...brandingOverrides, primaryColor: e.target.value, accentColor: e.target.value })}
+                                  className="w-10 h-10 rounded-lg cursor-pointer border-none bg-transparent"
+                                />
+                              </div>
+
+                              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-lg border border-gray-200" style={{ backgroundColor: brandingOverrides.backgroundColor }} />
+                                  <span className="text-xs font-bold text-[#3A4D4A]">Fond de Page</span>
+                                </div>
+                                <input 
+                                  type="color" 
+                                  value={brandingOverrides.backgroundColor}
+                                  onChange={(e) => setBrandingOverrides({ ...brandingOverrides, backgroundColor: e.target.value })}
+                                  className="w-10 h-10 rounded-lg cursor-pointer border-none bg-transparent"
+                                />
+                              </div>
+
+                              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-lg border border-gray-200" style={{ backgroundColor: brandingOverrides.textColor }} />
+                                  <span className="text-xs font-bold text-[#3A4D4A]">Couleur du Texte</span>
+                                </div>
+                                <input 
+                                  type="color" 
+                                  value={brandingOverrides.textColor}
+                                  onChange={(e) => setBrandingOverrides({ ...brandingOverrides, textColor: e.target.value })}
+                                  className="w-10 h-10 rounded-lg cursor-pointer border-none bg-transparent"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="bg-[#1B1B1B] rounded-[2rem] p-8 flex flex-col items-center justify-center text-center space-y-6 border-4 border-black/20 shadow-2xl relative overflow-hidden">
+                            {/* Preview Card */}
+                            <div className="absolute inset-0 opacity-10" style={{ backgroundColor: brandingOverrides.backgroundColor }} />
+                            <div className="relative z-10 space-y-4 w-full">
+                              <div className="h-2 w-20 bg-gray-600 rounded-full mx-auto" />
+                              <h4 className="text-xl font-black italic uppercase tracking-tighter" style={{ color: brandingOverrides.textColor, fontFamily: selectedTemplate.config.branding.fontHeadlines }}>
+                                Aperçu du Style
+                              </h4>
+                              <p className="text-[10px] opacity-60 max-w-[200px] mx-auto" style={{ color: brandingOverrides.textColor }}>
+                                Votre tunnel utilisera ces contrastes pour maximiser l&apos;impact visuel.
+                              </p>
+                              <div 
+                                className="px-6 py-3 rounded-xl text-[10px] font-black tracking-[0.2em] shadow-lg mx-auto inline-block"
+                                style={{ backgroundColor: brandingOverrides.primaryColor, color: brandingOverrides.backgroundColor }}
+                              >
+                                BOUTON D&apos;ACTION
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </motion.div>

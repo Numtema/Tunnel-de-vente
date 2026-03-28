@@ -5,10 +5,12 @@ const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY || "
 
 export async function frontendAssemblyAgent(data: any) {
   const template = data.template;
+  const branding = data.brandingOverrides || (template ? template.config.branding : null);
+  
   const templateDirectives = template ? `
 DIRECTIVES TEMPLATE OBLIGATOIRES:
 Tu DOIS utiliser les styles du template "${template.name}":
-- Couleurs: Primaire ${template.config.branding.primaryColor}, Fond ${template.config.branding.backgroundColor}, Texte ${template.config.branding.textColor}.
+- Couleurs: Primaire ${branding.primaryColor}, Fond ${branding.backgroundColor}, Texte ${branding.textColor}.
 - Polices: Titres "${template.config.branding.fontHeadlines}", Corps "${template.config.branding.fontBody}".
 - Structure suggérée: ${template.config.suggestedStructure.join(' > ')}.
 - Ton de voix: ${template.config.copywritingTone}.
