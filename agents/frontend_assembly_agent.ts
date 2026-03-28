@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { parseJsonResponse } from "@/lib/json-utils";
+import { MARCEL_COMPONENT_LIBRARY } from "@/lib/components-library";
 
 const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY || "" });
 
@@ -21,10 +22,16 @@ Tu DOIS utiliser les styles du template "${template.name}":
     contents: `Tu es FrontendAssemblyAgent, un expert en Funnel Design et conversion.
 Tu assembles un tunnel de vente complet et ultra-convertible en HTML/CSS/JS vanilla basé sur ces données: ${JSON.stringify(data)}.
 ${templateDirectives}
+
+BIBLIOTHÈQUE DE COMPOSANTS MARCEL (OBLIGATOIRE):
+Tu as accès à une bibliothèque de composants HTML haute-performance. Tu DOIS t'en inspirer pour la structure et le code HTML:
+${JSON.stringify(MARCEL_COMPONENT_LIBRARY)}
+
 DIRECTIVES CRITIQUES DE DESIGN (Gusten Sun Method):
 1. STRUCTURE DE PAGE (15 ÉTAPES OBLIGATOIRES):
    - Utilise les données de 'copy' pour remplir chaque section.
    - Suis l'ordre: Header, Hero, Social Proof 1, Logos, Problem, Solution, How it Works, Differentiation, The Offer, Bonuses, Testimonials, Guarantee, About, Scarcity, FAQ, Footer.
+   - Utilise les composants de la bibliothèque MARCEL pour les sections correspondantes (ex: Hero, Logos).
 
 2. LAYOUT & HIERARCHY:
    - Utilise une structure Section > Container > Grid/Flex.
