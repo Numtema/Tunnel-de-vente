@@ -41,9 +41,12 @@ DIRECTIVES CRITIQUES DE DESIGN (Gusten Sun Method):
    - Utilise la couleur primaire pour les CTA et les accents importants.
    - Ajoute de la profondeur avec des ombres subtiles et des calques (layers).
 
-7. DIRECTION & INTERACTION:
-   - Utilise des éléments visuels (flèches, regards) pour guider vers le CTA.
-   - Ajoute des interactions JS: Reveal au scroll (IntersectionObserver), Tilt effect sur les cartes, animations de pulse sur les boutons principaux.
+7. DIRECTION & INTERACTION (OBLIGATOIRE):
+   - FAQ ACCORDION: Implémente un effet accordéon où une seule question s'ouvre à la fois avec une transition fluide de la hauteur (max-height).
+   - CTA PULSE: Ajoute une animation de pulse subtile (@keyframes pulse) sur les boutons "Get Instant Access" et "Discover Plans".
+   - TILT EFFECT: Ajoute un effet de tilt interactif en JS sur les cartes de prix (pricing cards) et les bonus cards au survol (hover).
+   - SCROLL REVEAL: Utilise Intersection Observer pour ajouter la classe 'visible' aux éléments avec la classe 'reveal' (sections Problem, Solution, How it Works).
+   - DIRECTION VISUELLE: Utilise des éléments visuels (flèches, regards) pour guider vers le CTA.
 
 LIVRABLES:
 - index_html: Structure sémantique complète avec TOUTES les 15 étapes.

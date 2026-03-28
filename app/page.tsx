@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import JSZip from 'jszip';
 import { get, set } from 'idb-keyval';
-import { Copy, Check, Maximize2, Minimize2, FileCode2, Download, ExternalLink, X, FileArchive, FileJson, Sparkles, LayoutDashboard, Rocket, FileText, Settings, Users, ArrowRight, Image as ImageIcon, Trash2 } from 'lucide-react';
+import { Copy, Check, Maximize2, Minimize2, FileCode2, Download, ExternalLink, X, FileArchive, FileJson, Sparkles, LayoutDashboard, Rocket, FileText, Settings, Users, ArrowRight, Image as ImageIcon, Trash2, CreditCard, User, Mail, Lock, LogOut } from 'lucide-react';
 import { offerIntentAgent } from '@/agents/offer_intent_agent';
 import { funnelStructureAgent } from '@/agents/funnel_structure_agent';
 import { headlineCopyAgent } from '@/agents/headline_copy_agent';
@@ -84,7 +84,7 @@ export default function Page() {
   const [previewTab, setPreviewTab] = useState<'visual' | 'code'>('visual');
   
   const [projects, setProjects] = useState<Project[]>([]);
-  const [currentView, setCurrentView] = useState<'generator' | 'tunnels'>('generator');
+  const [currentView, setCurrentView] = useState<'generator' | 'tunnels' | 'dashboard' | 'settings'>('generator');
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
@@ -387,20 +387,21 @@ export default function Page() {
         <div className="p-8 flex flex-col items-center border-b border-[#4A5D5A]">
           <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#D4A017] to-yellow-200 p-1 mb-4">
             <div className="w-full h-full bg-[#2C3E3B] rounded-full flex items-center justify-center">
-              <Sparkles size={32} className="text-[#D4A017]" />
+              <Rocket size={32} className="text-[#D4A017]" />
             </div>
           </div>
-          <h2 className="font-bold tracking-widest text-sm text-center">AI FUNNEL</h2>
-          <p className="text-xs text-gray-400 mt-1">STUDIO</p>
+          <h2 className="font-bold tracking-widest text-sm text-center">FUNNEL</h2>
+          <p className="text-xs text-gray-400 mt-1 uppercase tracking-[0.3em]">Studio</p>
         </div>
 
         <nav className="flex-1 py-6">
           <ul className="space-y-2">
-            <li>
-              <a href="#" className="flex items-center gap-4 px-8 py-4 text-gray-300 hover:text-white hover:bg-[#4A5D5A] transition-colors">
-                <LayoutDashboard size={20} />
-                <span className="font-medium text-sm tracking-wide">DASHBOARD</span>
-              </a>
+            <li className="relative">
+              {currentView === 'dashboard' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#D4A017] rounded-r-full"></div>}
+              <button onClick={() => setCurrentView('dashboard')} className={`w-full flex items-center gap-4 px-8 py-4 transition-colors ${currentView === 'dashboard' ? 'bg-white text-[#3A4D4A] rounded-l-full ml-4 shadow-md' : 'text-gray-300 hover:text-white hover:bg-[#4A5D5A]'}`}>
+                <LayoutDashboard size={20} className={currentView === 'dashboard' ? 'text-[#D4A017]' : ''} />
+                <span className="font-bold text-sm tracking-wide">DASHBOARD</span>
+              </button>
             </li>
             <li className="relative">
               {currentView === 'generator' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#D4A017] rounded-r-full"></div>}
@@ -416,11 +417,12 @@ export default function Page() {
                 <span className="font-bold text-sm tracking-wide">MES TUNNELS</span>
               </button>
             </li>
-            <li>
-              <a href="#" className="flex items-center gap-4 px-8 py-4 text-gray-300 hover:text-white hover:bg-[#4A5D5A] transition-colors">
-                <Settings size={20} />
-                <span className="font-medium text-sm tracking-wide">PARAMÈTRES</span>
-              </a>
+            <li className="relative">
+              {currentView === 'settings' && <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#D4A017] rounded-r-full"></div>}
+              <button onClick={() => setCurrentView('settings')} className={`w-full flex items-center gap-4 px-8 py-4 transition-colors ${currentView === 'settings' ? 'bg-white text-[#3A4D4A] rounded-l-full ml-4 shadow-md' : 'text-gray-300 hover:text-white hover:bg-[#4A5D5A]'}`}>
+                <Settings size={20} className={currentView === 'settings' ? 'text-[#D4A017]' : ''} />
+                <span className="font-bold text-sm tracking-wide">PARAMÈTRES</span>
+              </button>
             </li>
           </ul>
         </nav>
@@ -520,7 +522,98 @@ export default function Page() {
             </div>
           </div>
 
-          {currentView === 'generator' ? (
+          {currentView === 'dashboard' && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-8"
+            >
+              <div className="flex items-center justify-between">
+                <h1 className="text-3xl font-bold text-[#3A4D4A]">Tableau de Bord</h1>
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100">
+                  <CreditCard size={18} className="text-[#D4A017]" />
+                  <span className="text-sm font-bold text-[#3A4D4A]">PLAN PRO</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[
+                  { label: 'Tunnels Générés', value: projects.length, icon: FileText, color: 'text-blue-500' },
+                  { label: 'Agents Actifs', value: '10', icon: Users, color: 'text-green-500' },
+                  { label: 'Images Créées', value: projects.filter(p => p.heroImage).length, icon: ImageIcon, color: 'text-purple-500' },
+                  { label: 'Temps Gagné', value: `${projects.length * 4}h`, icon: Sparkles, color: 'text-[#D4A017]' },
+                ].map((stat, i) => (
+                  <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center ${stat.color}`}>
+                      <stat.icon size={24} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{stat.label}</p>
+                      <p className="text-2xl font-black text-[#3A4D4A]">{stat.value}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-bold text-[#3A4D4A]">Projets Récents</h3>
+                    <button onClick={() => setCurrentView('tunnels')} className="text-[#D4A017] text-sm font-bold hover:underline">Voir tout</button>
+                  </div>
+                  {projects.length === 0 ? (
+                    <div className="text-center py-12 border-2 border-dashed border-gray-100 rounded-2xl">
+                      <p className="text-gray-400">Aucun projet récent</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {projects.slice(0, 3).map((project) => (
+                        <div key={project.id} className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-2xl transition-colors border border-transparent hover:border-gray-100">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-[#3A4D4A] flex items-center justify-center text-white">
+                              {project.heroImage ? <Image src={project.heroImage} alt="" width={48} height={48} className="rounded-xl object-cover" /> : <FileText size={20} />}
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-[#3A4D4A]">{project.name}</h4>
+                              <p className="text-xs text-gray-400">{new Date(project.date).toLocaleDateString()}</p>
+                            </div>
+                          </div>
+                          <button onClick={() => loadProject(project)} className="p-2 hover:bg-white rounded-full shadow-sm text-[#D4A017]">
+                            <ArrowRight size={20} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-[#3A4D4A] p-8 rounded-[2rem] shadow-xl text-white relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4A017] rounded-full opacity-10 -mr-10 -mt-10 blur-2xl"></div>
+                  <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                    <CreditCard size={24} className="text-[#D4A017]" />
+                    VOTRE PLAN
+                  </h3>
+                  <div className="mb-8">
+                    <p className="text-sm text-gray-400 mb-1 uppercase tracking-widest font-bold">Plan Actuel</p>
+                    <p className="text-3xl font-black text-[#D4A017]">STUDIO PRO</p>
+                  </div>
+                  <ul className="space-y-3 mb-8">
+                    {['Générations illimitées', 'Images IA Haute Qualité', 'Export ZIP complet', 'Support Prioritaire'].map((feature, i) => (
+                      <li key={i} className="flex items-center gap-2 text-sm text-gray-300">
+                        <Check size={16} className="text-green-500" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                  <button className="w-full py-4 bg-white text-[#3A4D4A] rounded-full font-bold text-sm tracking-widest hover:bg-gray-100 transition-colors shadow-lg">
+                    GÉRER L&apos;ABONNEMENT
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {currentView === 'generator' && (
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
               
               {/* Left Column: Input Form */}
@@ -589,7 +682,7 @@ export default function Page() {
                         <label className="block text-sm font-bold text-[#3A4D4A] mb-1">Nom du Produit / Service</label>
                         <input 
                           type="text" 
-                          className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all"
+                          className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all text-gray-800"
                           value={parsedIntent.product_name || ''}
                           onChange={(e) => setParsedIntent({...parsedIntent, product_name: e.target.value})}
                         />
@@ -598,7 +691,7 @@ export default function Page() {
                         <label className="block text-sm font-bold text-[#3A4D4A] mb-1">Prix</label>
                         <input 
                           type="text" 
-                          className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all"
+                          className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all text-gray-800"
                           value={parsedIntent.price || ''}
                           onChange={(e) => setParsedIntent({...parsedIntent, price: e.target.value})}
                         />
@@ -607,7 +700,7 @@ export default function Page() {
                         <label className="block text-sm font-bold text-[#3A4D4A] mb-1">Audience Cible</label>
                         <input 
                           type="text" 
-                          className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all"
+                          className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all text-gray-800"
                           value={parsedIntent.suspected_audience || ''}
                           onChange={(e) => setParsedIntent({...parsedIntent, suspected_audience: e.target.value})}
                         />
@@ -615,7 +708,7 @@ export default function Page() {
                       <div>
                         <label className="block text-sm font-bold text-[#3A4D4A] mb-1">Promesse Principale</label>
                         <textarea 
-                          className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all resize-none h-24"
+                          className="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all resize-none h-24 text-gray-800"
                           value={parsedIntent.core_promise || ''}
                           onChange={(e) => setParsedIntent({...parsedIntent, core_promise: e.target.value})}
                         />
@@ -788,7 +881,9 @@ export default function Page() {
               </div>
 
             </div>
-          ) : (
+          )}
+
+          {currentView === 'tunnels' && (
             <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-8">
                 <div>
@@ -848,6 +943,110 @@ export default function Page() {
                 </div>
               )}
             </div>
+          )}
+
+          {currentView === 'settings' && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+            >
+              <div className="lg:col-span-2 space-y-8">
+                <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
+                  <h3 className="text-xl font-bold text-[#3A4D4A] mb-6 flex items-center gap-2">
+                    <User size={24} className="text-[#D4A017]" />
+                    Profil Utilisateur
+                  </h3>
+                  <div className="flex flex-col md:flex-row gap-8 items-start">
+                    <div className="relative group">
+                      <div className="w-32 h-32 rounded-3xl bg-gray-100 flex items-center justify-center border-4 border-white shadow-lg overflow-hidden">
+                        <User size={64} className="text-gray-300" />
+                      </div>
+                      <button className="absolute -bottom-2 -right-2 w-10 h-10 bg-[#D4A017] text-white rounded-xl shadow-lg flex items-center justify-center hover:bg-yellow-600 transition-colors">
+                        <ImageIcon size={18} />
+                      </button>
+                    </div>
+                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Nom Complet</label>
+                        <div className="relative">
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                          <input type="text" defaultValue="Utilisateur Studio" className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-[#D4A017] transition-all text-gray-800" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Email</label>
+                        <div className="relative">
+                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                          <input type="email" defaultValue="numtemadigitalmarketingagency@gmail.com" className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-[#D4A017] transition-all text-gray-800" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
+                  <h3 className="text-xl font-bold text-[#3A4D4A] mb-6 flex items-center gap-2">
+                    <Lock size={24} className="text-[#D4A017]" />
+                    Sécurité
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Mot de passe actuel</label>
+                      <input type="password" placeholder="••••••••" className="w-full px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-[#D4A017] transition-all text-gray-800" />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Nouveau mot de passe</label>
+                        <input type="password" placeholder="••••••••" className="w-full px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-[#D4A017] transition-all text-gray-800" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Confirmer le mot de passe</label>
+                        <input type="password" placeholder="••••••••" className="w-full px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-[#D4A017] transition-all text-gray-800" />
+                      </div>
+                    </div>
+                    <div className="pt-4">
+                      <button className="bg-[#3A4D4A] text-white px-8 py-3 rounded-xl font-bold text-sm hover:bg-[#2C3E3B] transition-colors shadow-md">
+                        METTRE À JOUR LE MOT DE PASSE
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-8">
+                <div className="bg-[#3A4D4A] p-8 rounded-[2rem] shadow-xl text-white relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4A017] rounded-full opacity-10 -mr-10 -mt-10 blur-2xl"></div>
+                  <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                    <CreditCard size={24} className="text-[#D4A017]" />
+                    Plan Studio
+                  </h3>
+                  <div className="p-4 bg-white/5 rounded-2xl border border-white/10 mb-6">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Usage ce mois</span>
+                      <span className="text-xs font-bold text-[#D4A017]">85%</span>
+                    </div>
+                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                      <div className="w-[85%] h-full bg-[#D4A017] shadow-[0_0_10px_#D4A017]"></div>
+                    </div>
+                  </div>
+                  <button className="w-full py-4 bg-[#D4A017] text-white rounded-full font-bold text-sm tracking-widest hover:bg-yellow-600 transition-colors shadow-lg">
+                    UPGRADER LE PLAN
+                  </button>
+                </div>
+
+                <div className="bg-red-50 p-8 rounded-[2rem] border border-red-100">
+                  <h3 className="text-lg font-bold text-red-600 mb-4 flex items-center gap-2">
+                    <Trash2 size={20} />
+                    Zone de Danger
+                  </h3>
+                  <p className="text-sm text-red-500/70 mb-6">La suppression de votre compte est irréversible. Toutes vos données seront effacées.</p>
+                  <button className="w-full py-3 border-2 border-red-200 text-red-500 rounded-xl font-bold text-xs tracking-widest hover:bg-red-500 hover:text-white hover:border-red-500 transition-all">
+                    SUPPRIMER MON COMPTE
+                  </button>
+                </div>
+              </div>
+            </motion.div>
           )}
         </div>
       </main>
