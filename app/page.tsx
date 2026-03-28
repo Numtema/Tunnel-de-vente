@@ -17,6 +17,8 @@ import { proofNumbersAgent } from '@/agents/proof_numbers_agent';
 import { interactionMotionAgent } from '@/agents/interaction_motion_agent';
 import { frontendAssemblyAgent } from '@/agents/frontend_assembly_agent';
 import { imageGenerationAgent } from '@/agents/image_generation_agent';
+import { copywritingExpertAgent } from '@/agents/copywriting_expert_agent';
+import { imagePromptAgent } from '@/agents/image_prompt_agent';
 
 interface Project {
   id: string;
@@ -212,6 +214,8 @@ export default function Page() {
     try {
       const intentRes = { data: parsedIntent };
       const structureRes = await funnelStructureAgent(intentRes.data);
+      const copyRes = await copywritingExpertAgent(intentRes.data);
+      const imagePromptsRes = await imagePromptAgent({ intent: intentRes.data, copy: copyRes.data });
       const headlineRes = await headlineCopyAgent(structureRes.data);
       const layoutRes = await layoutHierarchyAgent(structureRes.data);
       const spacingRes = await spacingRhythmAgent(layoutRes.data);
@@ -222,6 +226,8 @@ export default function Page() {
       const frontendRes = await frontendAssemblyAgent({
         intent: intentRes.data,
         structure: structureRes.data,
+        copy: copyRes.data,
+        imagePrompts: imagePromptsRes.data,
         headline: headlineRes.data,
         layout: layoutRes.data,
         spacing: spacingRes.data,
@@ -232,7 +238,9 @@ export default function Page() {
       });
       const finalResult = { 
         intent: intentRes, 
-        structure: structureRes, 
+        structure: structureRes,
+        copy: copyRes,
+        imagePrompts: imagePromptsRes,
         headline: headlineRes, 
         layout: layoutRes,
         spacing: spacingRes,
@@ -374,19 +382,61 @@ export default function Page() {
           </ul>
         </nav>
         
-        <div className="p-8 border-t border-[#4A5D5A]">
-           <div className="flex items-center gap-4 text-gray-300 mb-4">
-             <Users size={20} />
-             <span className="font-medium text-sm tracking-wide">AGENTS ACTIFS</span>
+        <div className="p-8 border-t border-[#4A5D5A] bg-[#2C3E3B]/50">
+           <div className="flex items-center justify-between text-gray-300 mb-4">
+             <div className="flex items-center gap-4">
+               <Users size={20} className="text-[#D4A017]" />
+               <span className="font-bold text-xs tracking-[0.2em]">AGENTS ACTIFS</span>
+             </div>
+             <div className="flex gap-1">
+               <div className="w-1 h-3 bg-red-600 animate-pulse"></div>
+               <div className="w-1 h-3 bg-red-600 animate-pulse delay-75"></div>
+               <div className="w-1 h-3 bg-red-600 animate-pulse delay-150"></div>
+             </div>
            </div>
-           <div className="flex -space-x-3">
+           
+           {/* K2000 Scanning Effect */}
+           <div className="w-full h-1 bg-black rounded-full mb-6 overflow-hidden relative border border-gray-800">
+             <motion.div 
+               animate={{ 
+                 left: ["-20%", "100%", "-20%"],
+               }}
+               transition={{ 
+                 duration: 2, 
+                 repeat: Infinity, 
+                 ease: "linear" 
+               }}
+               className="absolute top-0 bottom-0 w-1/4 bg-gradient-to-r from-transparent via-red-600 to-transparent shadow-[0_0_10px_#ff0000]"
+             />
+           </div>
+
+           <div className="grid grid-cols-3 gap-2 mb-6">
              {[...Array(5)].map((_, i) => (
-               <div key={i} className="w-10 h-10 rounded-full bg-[#2C3E3B] border-2 border-[#3A4D4A] flex items-center justify-center text-xs font-bold text-[#D4A017]">
-                 A{i+1}
+               <div key={i} className="group relative">
+                 <div className="w-full aspect-square rounded-lg bg-[#1A2624] border border-[#4A5D5A] flex flex-col items-center justify-center transition-all hover:border-[#D4A017] hover:shadow-[0_0_10px_rgba(212,160,23,0.2)]">
+                   <span className="text-[10px] font-mono text-gray-500 group-hover:text-[#D4A017]">A{i+1}</span>
+                   <div className="w-1 h-1 rounded-full bg-green-500 mt-1 animate-pulse"></div>
+                 </div>
                </div>
              ))}
-             <div className="w-10 h-10 rounded-full bg-[#D4A017] border-2 border-[#3A4D4A] flex items-center justify-center text-xs font-bold text-white z-10">
+             <div className="w-full aspect-square rounded-lg bg-[#D4A017] flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-yellow-900/20">
                +5
+             </div>
+           </div>
+
+           {/* Stylized Logs */}
+           <div className="bg-black/40 rounded-lg p-3 font-mono text-[9px] text-green-500/70 space-y-1 border border-gray-800/50">
+             <div className="flex gap-2">
+               <span className="text-blue-400">[SYS]</span>
+               <span className="animate-pulse">Séquence d&apos;initialisation...</span>
+             </div>
+             <div className="flex gap-2">
+               <span className="text-yellow-400">[NET]</span>
+               <span>10 Agents synchronisés</span>
+             </div>
+             <div className="flex gap-2">
+               <span className="text-red-400">[K2K]</span>
+               <span className="animate-pulse">Mode Turbo Actif</span>
              </div>
            </div>
         </div>
@@ -397,16 +447,31 @@ export default function Page() {
         <div className="max-w-7xl mx-auto">
           
           {/* Top Bar */}
-          <div className="bg-white rounded-full px-8 py-4 flex items-center justify-between shadow-sm mb-8">
+          <div className="bg-white rounded-full px-8 py-4 flex items-center justify-between shadow-sm mb-8 border border-gray-100">
             <div className="flex items-center gap-4 text-[#3A4D4A] font-medium">
-              <span className="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full text-sm">
-                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+              <span className="flex items-center gap-2 bg-[#F0F4F3] px-5 py-2.5 rounded-full text-xs font-bold tracking-wider uppercase">
+                <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></span>
                 Système Prêt
               </span>
             </div>
-            <div className="flex items-center gap-6">
-              <div className="text-sm font-medium text-gray-500">10 Agents IA Synchronisés</div>
-              <button className="bg-[#D4A017] text-white px-6 py-2 rounded-full text-sm font-bold shadow-md hover:bg-yellow-600 transition-colors">
+            <div className="flex items-center gap-8">
+              <div className="text-xs font-bold text-gray-400 tracking-widest uppercase flex items-center gap-2">
+                <div className="flex gap-0.5">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="w-1 h-3 bg-[#D4A017] opacity-50"></div>
+                  ))}
+                </div>
+                10 Agents IA Synchronisés
+              </div>
+              <button 
+                onClick={() => {
+                  setStep('input');
+                  setResult(null);
+                  setRequest('');
+                  setCurrentProjectId(null);
+                }}
+                className="bg-[#3A4D4A] text-white px-8 py-3 rounded-full text-xs font-black tracking-[0.2em] shadow-xl hover:bg-[#2C3E3B] transition-all hover:scale-105 active:scale-95 border-b-4 border-black/20"
+              >
                 NOUVEAU PROJET
               </button>
             </div>

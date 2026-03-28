@@ -33,6 +33,9 @@ Contrat JSON:
   "next_actions": []
 }
 `,
+    config: {
+      responseMimeType: "application/json"
+    }
   });
 
   return parseJsonResponse(response.text);
