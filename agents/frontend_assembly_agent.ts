@@ -4,11 +4,21 @@ import { parseJsonResponse } from "@/lib/json-utils";
 const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY || "" });
 
 export async function frontendAssemblyAgent(data: any) {
+  const template = data.template;
+  const templateDirectives = template ? `
+DIRECTIVES TEMPLATE OBLIGATOIRES:
+Tu DOIS utiliser les styles du template "${template.name}":
+- Couleurs: Primaire ${template.config.branding.primaryColor}, Fond ${template.config.branding.backgroundColor}, Texte ${template.config.branding.textColor}.
+- Polices: Titres "${template.config.branding.fontHeadlines}", Corps "${template.config.branding.fontBody}".
+- Structure suggérée: ${template.config.suggestedStructure.join(' > ')}.
+- Ton de voix: ${template.config.copywritingTone}.
+` : "";
+
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
     contents: `Tu es FrontendAssemblyAgent, un expert en Funnel Design et conversion.
 Tu assembles un tunnel de vente complet et ultra-convertible en HTML/CSS/JS vanilla basé sur ces données: ${JSON.stringify(data)}.
-
+${templateDirectives}
 DIRECTIVES CRITIQUES DE DESIGN (Gusten Sun Method):
 1. STRUCTURE DE PAGE (15 ÉTAPES OBLIGATOIRES):
    - Utilise les données de 'copy' pour remplir chaque section.

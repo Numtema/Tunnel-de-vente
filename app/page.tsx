@@ -21,6 +21,8 @@ import { imageGenerationAgent } from '@/agents/image_generation_agent';
 import { copywritingExpertAgent } from '@/agents/copywriting_expert_agent';
 import { imagePromptAgent } from '@/agents/image_prompt_agent';
 
+import { TEMPLATES, Template } from '@/lib/templates';
+
 interface Project {
   id: string;
   name: string;
@@ -28,6 +30,7 @@ interface Project {
   request: string;
   result: any;
   heroImage?: string;
+  templateId?: string;
 }
 
 const CodeBlock = ({ code, filename, language }: { code: string, filename: string, language: string }) => {
@@ -211,7 +214,8 @@ export default function Page() {
   const [request, setRequest] = useState('');
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState<'input' | 'review' | 'generating' | 'result'>('input');
+  const [step, setStep] = useState<'template-selection' | 'input' | 'review' | 'generating' | 'result'>('template-selection');
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [parsedIntent, setParsedIntent] = useState<any>(null);
   const [preview, setPreview] = useState<any>(null);
@@ -252,7 +256,8 @@ export default function Page() {
       name: req.substring(0, 30) + (req.length > 30 ? '...' : ''),
       date: new Date().toISOString(),
       request: req,
-      result: newResult
+      result: newResult,
+      templateId: selectedTemplate?.id
     };
     
     const updatedProjects = [newProject, ...projects];
@@ -325,7 +330,8 @@ export default function Page() {
     setCurrentProjectId(null);
     setResult(null);
     setRequest('');
-    setStep('input');
+    setStep('template-selection');
+    setSelectedTemplate(null);
     setParsedIntent(null);
     setCurrentView('generator');
   };
@@ -336,7 +342,7 @@ export default function Page() {
     setResult(null);
     setError(null);
     try {
-      const intentRes = await offerIntentAgent(request);
+      const intentRes = await offerIntentAgent(request, selectedTemplate);
       setParsedIntent(intentRes.data);
       setStep('review');
     } catch (err: any) {
@@ -391,7 +397,8 @@ export default function Page() {
         images: imageRes.data,
         proof: proofRes.data,
         interaction: interactionRes.data,
-        hasHeroImage: !!heroImageUrl
+        hasHeroImage: !!heroImageUrl,
+        template: selectedTemplate
       });
       const finalResult = { 
         intent: intentRes, 
@@ -694,12 +701,7 @@ export default function Page() {
                 <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">Agents Synchronisés</span>
               </div>
               <GlitchButton 
-                onClick={() => {
-                  setStep('input');
-                  setResult(null);
-                  setRequest('');
-                  setCurrentProjectId(null);
-                }}
+                onClick={startNewProject}
                 className="bg-[#3A4D4A] text-white px-10 py-4 rounded-2xl text-[10px] font-black tracking-[0.3em] shadow-2xl hover:bg-[#2C3E3B] transition-all border-b-4 border-black/30 flex items-center gap-3"
               >
                 <Rocket size={16} className="text-[#D4A017] drop-shadow-[0_0_5px_rgba(212,160,23,0.8)]" />
@@ -821,6 +823,61 @@ export default function Page() {
               {/* Left Column: Input Form */}
               <div className="xl:col-span-2 space-y-8">
                 <AnimatePresence mode="wait">
+                  {step === 'template-selection' && (
+                    <motion.div 
+                      key="template-step"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      className="space-y-8"
+                    >
+                      <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
+                        <h1 className="text-3xl font-bold text-[#3A4D4A] mb-2">Choisissez un Template</h1>
+                        <p className="text-gray-500 mb-8">Sélectionnez une base optimisée ou commencez de zéro.</p>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Option: No Template */}
+                          <button 
+                            onClick={() => {
+                              setSelectedTemplate(null);
+                              setStep('input');
+                            }}
+                            className="group relative flex flex-col items-center justify-center p-8 rounded-3xl border-2 border-dashed border-gray-200 hover:border-[#D4A017] hover:bg-yellow-50 transition-all text-center"
+                          >
+                            <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-400 group-hover:text-[#D4A017] group-hover:bg-white transition-colors mb-4">
+                              <Sparkles size={32} />
+                            </div>
+                            <h3 className="font-bold text-[#3A4D4A]">Génération Libre</h3>
+                            <p className="text-xs text-gray-400 mt-2">Laissez l&apos;IA tout inventer de A à Z</p>
+                          </button>
+
+                          {/* Templates List */}
+                          {TEMPLATES.map((template) => (
+                            <button 
+                              key={template.id}
+                              onClick={() => {
+                                setSelectedTemplate(template);
+                                setStep('input');
+                              }}
+                              className="group relative flex flex-col overflow-hidden rounded-3xl border-2 border-transparent hover:border-[#D4A017] transition-all text-left bg-white shadow-sm hover:shadow-xl"
+                            >
+                              <div className="h-32 w-full relative overflow-hidden bg-gray-100">
+                                <Image src={template.thumbnail} alt={template.name} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
+                                <div className="absolute top-3 right-3 bg-white/90 backdrop-blur px-2 py-1 rounded-lg text-[10px] font-bold text-[#3A4D4A] uppercase tracking-wider">
+                                  {template.category}
+                                </div>
+                              </div>
+                              <div className="p-6">
+                                <h3 className="font-bold text-[#3A4D4A]">{template.name}</h3>
+                                <p className="text-xs text-gray-500 mt-1 line-clamp-2">{template.description}</p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
                   {step === 'input' && (
                     <motion.div 
                       key="input-step"
