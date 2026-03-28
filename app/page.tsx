@@ -75,6 +75,7 @@ export default function Page() {
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'input' | 'review' | 'generating' | 'result'>('input');
+  const [error, setError] = useState<string | null>(null);
   const [parsedIntent, setParsedIntent] = useState<any>(null);
   const [preview, setPreview] = useState<any>(null);
   const [previewMode, setPreviewMode] = useState<'mobile' | 'desktop'>('desktop');
@@ -187,12 +188,18 @@ export default function Page() {
     e.preventDefault();
     setLoading(true);
     setResult(null);
+    setError(null);
     try {
       const intentRes = await offerIntentAgent(request);
       setParsedIntent(intentRes.data);
       setStep('review');
-    } catch (error) {
-      console.error(error);
+    } catch (err: any) {
+      console.error(err);
+      if (err.message?.includes('403') || err.message?.includes('leaked')) {
+        setError("Votre clé API Gemini a été signalée comme fuitée. Veuillez la mettre à jour dans le menu Paramètres de AI Studio.");
+      } else {
+        setError("Une erreur est survenue lors de l'analyse de l'offre. Veuillez réessayer.");
+      }
     } finally {
       setLoading(false);
     }
@@ -201,6 +208,7 @@ export default function Page() {
   const handleConfirmIntent = async () => {
     setLoading(true);
     setStep('generating');
+    setError(null);
     try {
       const intentRes = { data: parsedIntent };
       const structureRes = await funnelStructureAgent(intentRes.data);
@@ -249,8 +257,13 @@ export default function Page() {
         setProjects(updatedProjects);
         await set('ai_funnel_projects', updatedProjects);
       }
-    } catch (error) {
-      console.error(error);
+    } catch (err: any) {
+      console.error(err);
+      if (err.message?.includes('403') || err.message?.includes('leaked')) {
+        setError("Votre clé API Gemini a été signalée comme fuitée. Veuillez la mettre à jour dans le menu Paramètres de AI Studio.");
+      } else {
+        setError("Une erreur est survenue lors de la génération du tunnel. Veuillez réessayer.");
+      }
       setStep('review');
     } finally {
       setLoading(false);
@@ -413,6 +426,12 @@ export default function Page() {
                     <h1 className="text-3xl font-bold text-[#3A4D4A] mb-2">Décrivez votre offre</h1>
                     <p className="text-gray-500 mb-6">Laissez nos agents concevoir le tunnel parfait pour vous.</p>
                     
+                    {error && (
+                      <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm font-medium">
+                        {error}
+                      </div>
+                    )}
+
                     <form onSubmit={handleSubmit}>
                       <textarea
                         className="w-full p-6 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-[#D4A017] focus:ring-0 transition-all resize-none text-gray-700 text-lg min-h-[200px] mb-6"
@@ -451,6 +470,12 @@ export default function Page() {
                     <h1 className="text-3xl font-bold text-[#3A4D4A] mb-2">Vérification de l&apos;offre</h1>
                     <p className="text-gray-500 mb-6">Corrigez les informations ci-dessous avant de générer le tunnel pour éviter les hallucinations.</p>
                     
+                    {error && (
+                      <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm font-medium">
+                        {error}
+                      </div>
+                    )}
+
                     <div className="space-y-4 mb-8">
                       <div>
                         <label className="block text-sm font-bold text-[#3A4D4A] mb-1">Nom du Produit / Service</label>
