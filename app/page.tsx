@@ -427,61 +427,88 @@ export default function Page() {
           </ul>
         </nav>
         
-        <div className="p-8 border-t border-[#4A5D5A] bg-[#2C3E3B]/50">
+        <div className="p-6 border-t border-[#4A5D5A] bg-[#2C3E3B]/80 backdrop-blur-sm">
            <div className="flex items-center justify-between text-gray-300 mb-4">
-             <div className="flex items-center gap-4">
-               <Users size={20} className="text-[#D4A017]" />
-               <span className="font-bold text-xs tracking-[0.2em]">AGENTS ACTIFS</span>
+             <div className="flex items-center gap-3">
+               <div className="relative">
+                 <Users size={18} className="text-[#D4A017]" />
+                 <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
+               </div>
+               <span className="font-bold text-[10px] tracking-[0.3em] text-gray-400">AGENTS ACTIFS</span>
              </div>
-             <div className="flex gap-1">
-               <div className="w-1 h-3 bg-red-600 animate-pulse"></div>
-               <div className="w-1 h-3 bg-red-600 animate-pulse delay-75"></div>
-               <div className="w-1 h-3 bg-red-600 animate-pulse delay-150"></div>
+             <div className="flex gap-1.5">
+               <div className="w-1 h-4 bg-red-600/40 rounded-full overflow-hidden">
+                 <motion.div 
+                   animate={{ height: ["20%", "80%", "40%", "100%", "20%"] }}
+                   transition={{ duration: 1.5, repeat: Infinity }}
+                   className="w-full bg-red-500"
+                 />
+               </div>
+               <div className="w-1 h-4 bg-red-600/40 rounded-full overflow-hidden">
+                 <motion.div 
+                   animate={{ height: ["60%", "20%", "90%", "30%", "60%"] }}
+                   transition={{ duration: 1.2, repeat: Infinity }}
+                   className="w-full bg-red-500"
+                 />
+               </div>
              </div>
            </div>
            
-           {/* K2000 Scanning Effect */}
-           <div className="w-full h-1 bg-black rounded-full mb-6 overflow-hidden relative border border-gray-800">
+           {/* K2000 Scanning Effect - Upgraded */}
+           <div className="w-full h-[3px] bg-black/40 rounded-full mb-6 overflow-hidden relative border border-white/5 shadow-inner">
              <motion.div 
                animate={{ 
-                 left: ["-20%", "100%", "-20%"],
+                 left: ["-40%", "120%", "-40%"],
                }}
                transition={{ 
-                 duration: 2, 
+                 duration: 2.5, 
                  repeat: Infinity, 
-                 ease: "linear" 
+                 ease: "easeInOut" 
                }}
-               className="absolute top-0 bottom-0 w-1/4 bg-gradient-to-r from-transparent via-red-600 to-transparent shadow-[0_0_10px_#ff0000]"
+               className="absolute top-0 bottom-0 w-1/3 bg-gradient-to-r from-transparent via-red-500 to-transparent shadow-[0_0_15px_#ef4444]"
              />
            </div>
 
-           <div className="grid grid-cols-3 gap-2 mb-6">
-             {[...Array(5)].map((_, i) => (
+           <div className="grid grid-cols-4 gap-2 mb-6">
+             {[...Array(7)].map((_, i) => (
                <div key={i} className="group relative">
-                 <div className="w-full aspect-square rounded-lg bg-[#1A2624] border border-[#4A5D5A] flex flex-col items-center justify-center transition-all hover:border-[#D4A017] hover:shadow-[0_0_10px_rgba(212,160,23,0.2)]">
-                   <span className="text-[10px] font-mono text-gray-500 group-hover:text-[#D4A017]">A{i+1}</span>
-                   <div className="w-1 h-1 rounded-full bg-green-500 mt-1 animate-pulse"></div>
+                 <div className="w-full aspect-square rounded-lg bg-[#1A2624] border border-[#4A5D5A]/50 flex flex-col items-center justify-center transition-all hover:border-[#D4A017] hover:bg-[#2C3E3B] group-hover:shadow-[0_0_15px_rgba(212,160,23,0.15)]">
+                   <span className="text-[9px] font-mono text-gray-500 group-hover:text-[#D4A017] transition-colors">A{i+1}</span>
+                   <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e] mt-1 animate-pulse"></div>
                  </div>
                </div>
              ))}
-             <div className="w-full aspect-square rounded-lg bg-[#D4A017] flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-yellow-900/20">
-               +5
+             <div className="w-full aspect-square rounded-lg bg-gradient-to-br from-[#D4A017] to-[#B8860B] flex items-center justify-center text-[10px] font-black text-white shadow-lg shadow-yellow-900/40 border border-white/10 hover:scale-105 transition-transform cursor-default">
+               +3
              </div>
            </div>
 
-           {/* Stylized Logs */}
-           <div className="bg-black/40 rounded-lg p-3 font-mono text-[9px] text-green-500/70 space-y-1 border border-gray-800/50">
-             <div className="flex gap-2">
-               <span className="text-blue-400">[SYS]</span>
-               <span className="animate-pulse">Séquence d&apos;initialisation...</span>
-             </div>
-             <div className="flex gap-2">
-               <span className="text-yellow-400">[NET]</span>
-               <span>10 Agents synchronisés</span>
-             </div>
-             <div className="flex gap-2">
-               <span className="text-red-400">[K2K]</span>
-               <span className="animate-pulse">Mode Turbo Actif</span>
+           {/* Stylized Logs - Upgraded Terminal Look */}
+           <div className="bg-black/60 rounded-xl p-3 font-mono text-[9px] border border-white/5 shadow-2xl relative overflow-hidden group">
+             <div className="absolute top-0 left-0 w-full h-full pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%]"></div>
+             <div className="space-y-1.5 relative z-10">
+               <div className="flex gap-2 items-start">
+                 <span className="text-blue-400 shrink-0 opacity-80">SYS</span>
+                 <span className="text-gray-400 leading-tight">Initialisation de la séquence...</span>
+               </div>
+               <div className="flex gap-2 items-start">
+                 <span className="text-yellow-500 shrink-0 opacity-80">NET</span>
+                 <span className="text-gray-400 leading-tight">10 Agents IA synchronisés</span>
+               </div>
+               <div className="flex gap-2 items-start">
+                 <span className="text-red-500 shrink-0 opacity-80">K2K</span>
+                 <motion.span 
+                   animate={{ opacity: [1, 0.5, 1] }}
+                   transition={{ duration: 0.5, repeat: Infinity }}
+                   className="text-red-400 font-bold tracking-tighter"
+                 >
+                   MODE TURBO ACTIF
+                 </motion.span>
+               </div>
+               <div className="flex gap-2 items-start opacity-40">
+                 <span className="text-green-500 shrink-0">OK</span>
+                 <span className="text-gray-500">Prêt pour génération</span>
+               </div>
              </div>
            </div>
         </div>
@@ -491,22 +518,32 @@ export default function Page() {
       <main className="flex-1 overflow-y-auto p-8 relative">
         <div className="max-w-7xl mx-auto">
           
-          {/* Top Bar */}
-          <div className="bg-white rounded-full px-8 py-4 flex items-center justify-between shadow-sm mb-8 border border-gray-100">
-            <div className="flex items-center gap-4 text-[#3A4D4A] font-medium">
-              <span className="flex items-center gap-2 bg-[#F0F4F3] px-5 py-2.5 rounded-full text-xs font-bold tracking-wider uppercase">
-                <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]"></span>
-                Système Prêt
-              </span>
+          {/* Top Bar - Upgraded */}
+          <div className="bg-white/80 backdrop-blur-md rounded-3xl px-8 py-5 flex items-center justify-between shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-10 border border-white/20">
+            <div className="flex items-center gap-6 text-[#3A4D4A] font-medium">
+              <div className="flex items-center gap-3 bg-[#F0F4F3] px-6 py-3 rounded-2xl text-[10px] font-black tracking-[0.2em] uppercase border border-gray-100 shadow-inner">
+                <div className="relative">
+                   <div className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_10px_#22c55e]"></div>
+                   <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-green-400 animate-ping"></div>
+                 </div>
+                Système Opérationnel
+              </div>
+              <div className="h-8 w-px bg-gray-200 hidden md:block"></div>
+              <div className="hidden md:flex items-center gap-2 text-[10px] font-bold text-gray-400 tracking-widest uppercase">
+                <Sparkles size={14} className="text-[#D4A017]" />
+                Moteur IA v4.2
+              </div>
             </div>
             <div className="flex items-center gap-8">
-              <div className="text-xs font-bold text-gray-400 tracking-widest uppercase flex items-center gap-2">
-                <div className="flex gap-0.5">
+              <div className="hidden lg:flex items-center gap-3">
+                <div className="flex -space-x-2">
                   {[...Array(3)].map((_, i) => (
-                    <div key={i} className="w-1 h-3 bg-[#D4A017] opacity-50"></div>
+                    <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center overflow-hidden shadow-sm">
+                      <div className={`w-full h-full bg-gradient-to-br ${i === 0 ? 'from-blue-400 to-blue-600' : i === 1 ? 'from-purple-400 to-purple-600' : 'from-orange-400 to-orange-600'} opacity-20`}></div>
+                    </div>
                   ))}
                 </div>
-                10 Agents IA Synchronisés
+                <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">Agents Synchronisés</span>
               </div>
               <button 
                 onClick={() => {
@@ -515,8 +552,9 @@ export default function Page() {
                   setRequest('');
                   setCurrentProjectId(null);
                 }}
-                className="bg-[#3A4D4A] text-white px-8 py-3 rounded-full text-xs font-black tracking-[0.2em] shadow-xl hover:bg-[#2C3E3B] transition-all hover:scale-105 active:scale-95 border-b-4 border-black/20"
+                className="bg-[#3A4D4A] text-white px-10 py-4 rounded-2xl text-[10px] font-black tracking-[0.3em] shadow-2xl hover:bg-[#2C3E3B] transition-all border-b-4 border-black/30 flex items-center gap-3"
               >
+                <Rocket size={16} className="text-[#D4A017]" />
                 NOUVEAU PROJET
               </button>
             </div>
