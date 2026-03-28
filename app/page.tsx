@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import JSZip from 'jszip';
+import { get, set } from 'idb-keyval';
 import { Copy, Check, Maximize2, Minimize2, FileCode2, Download, ExternalLink, X, FileArchive, FileJson, Sparkles, LayoutDashboard, Rocket, FileText, Settings, Users, ArrowRight, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { offerIntentAgent } from '@/agents/offer_intent_agent';
 import { funnelStructureAgent } from '@/agents/funnel_structure_agent';
@@ -85,17 +86,29 @@ export default function Page() {
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   useEffect(() => {
-    const savedProjects = localStorage.getItem('ai_funnel_projects');
-    if (savedProjects) {
+    const loadProjects = async () => {
       try {
-        setProjects(JSON.parse(savedProjects));
+        let savedProjects = await get('ai_funnel_projects');
+        if (!savedProjects) {
+          // Try to migrate from localStorage
+          const local = localStorage.getItem('ai_funnel_projects');
+          if (local) {
+            savedProjects = JSON.parse(local);
+            await set('ai_funnel_projects', savedProjects);
+            localStorage.removeItem('ai_funnel_projects');
+          }
+        }
+        if (savedProjects) {
+          setProjects(savedProjects);
+        }
       } catch (e) {
-        console.error("Failed to parse projects from localStorage", e);
+        console.error("Failed to load projects from IndexedDB", e);
       }
-    }
+    };
+    loadProjects();
   }, []);
 
-  const saveProject = (newResult: any, req: string) => {
+  const saveProject = async (newResult: any, req: string) => {
     const newProject: Project = {
       id: Date.now().toString(),
       name: req.substring(0, 30) + (req.length > 30 ? '...' : ''),
@@ -106,14 +119,22 @@ export default function Page() {
     
     const updatedProjects = [newProject, ...projects];
     setProjects(updatedProjects);
-    localStorage.setItem('ai_funnel_projects', JSON.stringify(updatedProjects));
     setCurrentProjectId(newProject.id);
+    try {
+      await set('ai_funnel_projects', updatedProjects);
+    } catch (e) {
+      console.error("Failed to save project to IndexedDB", e);
+    }
   };
 
-  const deleteProject = (id: string) => {
+  const deleteProject = async (id: string) => {
     const updatedProjects = projects.filter(p => p.id !== id);
     setProjects(updatedProjects);
-    localStorage.setItem('ai_funnel_projects', JSON.stringify(updatedProjects));
+    try {
+      await set('ai_funnel_projects', updatedProjects);
+    } catch (e) {
+      console.error("Failed to delete project from IndexedDB", e);
+    }
     if (currentProjectId === id) {
       setCurrentProjectId(null);
       setResult(null);
@@ -144,7 +165,7 @@ export default function Page() {
           return p;
         });
         setProjects(updatedProjects);
-        localStorage.setItem('ai_funnel_projects', JSON.stringify(updatedProjects));
+        await set('ai_funnel_projects', updatedProjects);
       }
     } catch (error) {
       console.error(error);
@@ -226,7 +247,7 @@ export default function Page() {
           return p;
         });
         setProjects(updatedProjects);
-        localStorage.setItem('ai_funnel_projects', JSON.stringify(updatedProjects));
+        await set('ai_funnel_projects', updatedProjects);
       }
     } catch (error) {
       console.error(error);
